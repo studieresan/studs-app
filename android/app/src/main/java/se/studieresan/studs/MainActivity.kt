@@ -1,38 +1,33 @@
 package se.studieresan.studs
 
 import android.os.Bundle
-import android.support.design.widget.BottomNavigationView
 import android.support.v7.app.AppCompatActivity
-import android.widget.TextView
+import android.util.Log
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 
-class MainActivity : AppCompatActivity() {
-
-    private var mTextMessage: TextView? = null
-
-    private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
-        when (item.itemId) {
-            R.id.navigation_home -> {
-                mTextMessage!!.setText(R.string.title_home)
-                return@OnNavigationItemSelectedListener true
-            }
-            R.id.navigation_dashboard -> {
-                mTextMessage!!.setText(R.string.title_dashboard)
-                return@OnNavigationItemSelectedListener true
-            }
-            R.id.navigation_notifications -> {
-                mTextMessage!!.setText(R.string.title_notifications)
-                return@OnNavigationItemSelectedListener true
-            }
+class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+    override fun onMapReady(googleMap: GoogleMap?) {
+        Log.d("MAIN", "map ready")
+        val timesSquare = LatLng(40.758899, -73.9873197)
+        googleMap?.apply {
+            addMarker(MarkerOptions().position(timesSquare).title("Party"))
+            animateCamera(CameraUpdateFactory.newLatLngZoom(timesSquare, 15F))
         }
-        false
+    }
+
+    val map by lazy {
+        supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        mTextMessage = findViewById(R.id.message) as TextView
-        val navigation = findViewById(R.id.navigation) as BottomNavigationView
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
+        map.getMapAsync(this)
     }
 }
