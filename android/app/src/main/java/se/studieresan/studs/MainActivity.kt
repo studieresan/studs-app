@@ -1,5 +1,6 @@
 package se.studieresan.studs
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
@@ -7,6 +8,9 @@ import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationServices
@@ -16,17 +20,60 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.FirebaseDatabase
+import se.studieresan.studs.LoginDialogFragment.Companion.RC_SIGN_IN
 import se.studieresan.studs.extensions.FirebaseAPI
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, View.OnClickListener {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == RC_SIGN_IN) {
+            val result = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
+
+            if (result.isSuccess) {
+                result.signInAccount?.let {
+                    firebaseAuthWithUser(it)
+                }
+            } else {
+                Log.e(TAG, "${result.status}")
+            }
+        }
+    }
+
+    private fun firebaseAuthWithUser(user: GoogleSignInAccount) {
+        val credential = GoogleAuthProvider.getCredential(user.idToken, null)
+
+        auth.signInWithCredential(credential).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                loginDialog?.dismiss()
+                currentUser = auth.currentUser
+                val db = FirebaseDatabase.getInstance()
+                currentUser?.apply {
+                    val user = User(displayName, email, photoUrl?.toString())
+                    db.getReference("users").child(uid).setValue(user)
+                }
+                ShareLocationFragment().display(supportFragmentManager)
+            }
+        }
+    }
+
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.fab_my_location -> showDeviceLocation()
-            R.id.fab_share -> ShareLocationFragment().display(supportFragmentManager)
+            R.id.fab_share ->
+                if (currentUser != null) {
+                    ShareLocationFragment().display(supportFragmentManager)
+                } else {
+                    loginDialog = LoginDialogFragment(googleApi)
+                    loginDialog?.display(supportFragmentManager)
+                }
         }
     }
+
+    var loginDialog: LoginDialogFragment? = null
 
     val TAG = MainActivity::class.java.simpleName
 
@@ -71,13 +118,28 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
         supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
     }
 
+    val gso by lazy {
+      GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+    }
+
+
     val googleApi by lazy {
         GoogleApiClient.Builder(this)
                 .enableAutoManage(this, this)
                 .addConnectionCallbacks(this)
                 .addApi(LocationServices.API)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build()
     }
+
+    val auth by lazy {
+        FirebaseAuth.getInstance()
+    }
+
+    var currentUser: FirebaseUser? = null
 
     val locations by lazy {
         val db = FirebaseDatabase.getInstance()
@@ -120,6 +182,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
         mapFragment.getMapAsync(this)
         findViewById(R.id.fab_my_location).setOnClickListener(this)
         findViewById(R.id.fab_share).setOnClickListener(this)
+        currentUser = auth.currentUser
     }
 
     override fun onDestroy() {

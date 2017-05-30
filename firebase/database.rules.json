@@ -1,5 +1,9 @@
 {
   "rules": {
+    "users": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
     "locations": {
       ".read": true,
       ".write": true
