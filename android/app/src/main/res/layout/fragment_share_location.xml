@@ -8,11 +8,32 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Share something..."/>
-    
+
     <Button
-        android:id="@+id/share_button"
+        android:id="@+id/cafe_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end"
-        android:text="Share"/>
+        android:text="Café"/>
+
+    <Button
+        android:id="@+id/bar_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:text="Bar"/>
+
+    <Button
+        android:id="@+id/rest_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:text="Restaurang"/>
+
+    <Button
+        android:id="@+id/other_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:text="Annat"/>
 </LinearLayout>

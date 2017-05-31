@@ -22,23 +22,20 @@ class ShareLocationFragment: DialogFragment() {
 
         val messageView = v.findViewById(R.id.message) as EditText
 
-        v.findViewById(R.id.share_button).setOnClickListener {
-            val db = FirebaseDatabase.getInstance().getReference("locations")
+        v.findViewById(R.id.cafe_button).setOnClickListener {
+            submit("cafe", messageView)
+        }
 
-            val fineLocation = android.Manifest.permission.ACCESS_FINE_LOCATION
-            val ctx = context as MainActivity
-            if (ContextCompat.checkSelfPermission(ctx, fineLocation)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(ctx, arrayOf(fineLocation), ctx.PERMISSIONS_REQUEST_IGNORE)
-                return@setOnClickListener
-            }
+        v.findViewById(R.id.bar_button).setOnClickListener {
+            submit("bar", messageView)
+        }
 
-            val location = LocationServices.FusedLocationApi
-                    .getLastLocation(ctx.googleApi)
-            val message = messageView.text.toString()
-            val data = Location(location.latitude, location.longitude, message)
-            db.push().setValue(data)
-            dismiss()
+        v.findViewById(R.id.rest_button).setOnClickListener {
+            submit("rest", messageView)
+        }
+
+        v.findViewById(R.id.other_button).setOnClickListener {
+            submit("other", messageView)
         }
 
         return v
@@ -52,5 +49,23 @@ class ShareLocationFragment: DialogFragment() {
         }
         ft.addToBackStack(null)
         show(ft, TAG)
+    }
+
+    fun submit(type: String, messageView: EditText) {
+        val db = FirebaseDatabase.getInstance().getReference("locations")
+
+        val fineLocation = android.Manifest.permission.ACCESS_FINE_LOCATION
+        val ctx = context as MainActivity
+        if (ContextCompat.checkSelfPermission(ctx, fineLocation)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(ctx, arrayOf(fineLocation), ctx.PERMISSIONS_REQUEST_IGNORE)
+        }
+
+        val location = LocationServices.FusedLocationApi
+                .getLastLocation(ctx.googleApi)
+        val message = messageView.text.toString()
+        val data = Location(location.latitude, location.longitude, message, type)
+        db.push().setValue(data)
+        dismiss()
     }
 }
