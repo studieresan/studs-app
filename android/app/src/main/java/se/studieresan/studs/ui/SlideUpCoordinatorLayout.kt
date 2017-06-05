@@ -19,9 +19,7 @@ class SlideUpCoordinatorLayout : CoordinatorLayout {
         insets ?: return super.onApplyWindowInsets(insets)
 
         val topNav = findViewById(R.id.bottom_nav)
-        with (topNav) {
-            setPadding(paddingLeft, paddingTop + insets.systemWindowInsetTop, paddingRight, paddingBottom)
-        }
+        topNav.setPadding(paddingLeft, paddingTop + insets.systemWindowInsetTop, paddingRight, paddingBottom)
         return super.onApplyWindowInsets(insets)
     }
 }
