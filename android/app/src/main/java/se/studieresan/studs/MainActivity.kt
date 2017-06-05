@@ -2,12 +2,15 @@ package se.studieresan.studs
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageButton
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -27,6 +30,7 @@ import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.FirebaseDatabase
 import se.studieresan.studs.LoginDialogFragment.Companion.RC_SIGN_IN
 import se.studieresan.studs.extensions.FirebaseAPI
+import se.studieresan.studs.ui.SlideupNestedScrollview
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, View.OnClickListener {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -183,12 +187,65 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
         findViewById(R.id.fab_my_location).setOnClickListener(this)
         findViewById(R.id.fab_share).setOnClickListener(this)
         currentUser = auth.currentUser
+        setupBottomNav()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         locationListener?.let {
             locations.removeEventListener(it)
+        }
+    }
+
+    private fun setupBottomNav() {
+        listOf(R.id.bottom_nav, R.id.top_nav).forEach {
+            with (findViewById(it)) {
+                findViewById(R.id.nav_1).setOnClickListener { switchFragment(1) }
+                findViewById(R.id.nav_2).setOnClickListener { switchFragment(2) }
+                findViewById(R.id.nav_3).setOnClickListener { switchFragment(3) }
+            }
+        }
+        switchFragment(2)
+    }
+
+    private fun switchFragment(page: Int) {
+        slideUp()
+        val fragmentTransaction = supportFragmentManager.beginTransaction()
+        val (fragment, id) = when (page) {
+            1 -> DummyFragment() to "dummy1"
+            2 -> DummyFragment() to "dummy2"
+            else -> DummyFragment() to "dummy3"
+        }
+        fragmentTransaction.setCustomAnimations(R.transition.slide_up, R.transition.out)
+        fragmentTransaction.replace(R.id.fragment_container, fragment, id)
+        fragmentTransaction.commit()
+
+        listOf(R.id.bottom_nav, R.id.top_nav).forEach { nav ->
+            with (findViewById(nav) as ViewGroup) {
+                (0..childCount - 1).forEach {
+                    if (it == page - 1) {
+                        (getChildAt(it) as ImageButton).setColorFilter(resources.getColor(R.color.colorAccent))
+                    } else {
+                        (getChildAt(it) as ImageButton).setColorFilter(Color.WHITE)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun slideUp() {
+        val bottomSheet = findViewById(R.id.slide_up)
+        if (bottomSheet is SlideupNestedScrollview) {
+            bottomSheet.preview()
+        }
+    }
+
+    override fun onBackPressed() {
+        val bottomSheet = findViewById(R.id.slide_up)
+        if (bottomSheet is SlideupNestedScrollview && bottomSheet.isAtTop) {
+            bottomSheet.obscure()
+        } else {
+            super.onBackPressed()
         }
     }
 }
