@@ -4,7 +4,10 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
+import jp.wasabeef.glide.transformations.CropCircleTransformation
 import se.studieresan.studs.OnLocationSelectedListener
 import se.studieresan.studs.R
 import se.studieresan.studs.models.Location
@@ -33,6 +36,12 @@ class OverviewAdapter(val callback: OnLocationSelectedListener) : RecyclerView.A
         val user = users.find { it.id == location.user }
         holder.title.text = location.message
         holder.subTitle.text = user?.name ?: "Unknown was here"
+        if (user != null) {
+            holder.image.circularImage(url = user.picture)
+        } else {
+            val fallback = holder.itemView.context.getDrawable(R.drawable.ic_person_black_24dp)
+            holder.image.setImageDrawable(fallback)
+        }
         holder.itemView.setOnClickListener {
             callback.onLocationSelected(location)
         }
@@ -43,5 +52,13 @@ class OverviewAdapter(val callback: OnLocationSelectedListener) : RecyclerView.A
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val title = view.findViewById(R.id.title) as TextView
         val subTitle = view.findViewById(R.id.sub_title) as TextView
+        val image = view.findViewById(R.id.image) as ImageView
     }
 }
+
+fun ImageView.circularImage(url: String?) =
+        Glide.with(context)
+                .load(url)
+                .centerCrop()
+                .bitmapTransform(CropCircleTransformation(context))
+                .into(this)
