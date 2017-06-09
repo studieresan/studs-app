@@ -15,11 +15,16 @@ class SlideUpCoordinatorLayout : CoordinatorLayout {
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {}
     constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {}
 
+    private var setPadding = false
+
     override fun onApplyWindowInsets(insets: WindowInsets?): WindowInsets {
         insets ?: return super.onApplyWindowInsets(insets)
 
         val topNav = findViewById(R.id.bottom_nav)
-        topNav.setPadding(paddingLeft, paddingTop + insets.systemWindowInsetTop, paddingRight, paddingBottom)
+        if (!setPadding) {
+            topNav.setPadding(paddingLeft, paddingTop + insets.systemWindowInsetTop, paddingRight, paddingBottom)
+            setPadding = true
+        }
         return super.onApplyWindowInsets(insets)
     }
 }

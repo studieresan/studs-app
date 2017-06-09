@@ -1,18 +1,40 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <EditText
         android:id="@+id/message"
         android:layout_width="match_parent"
+        android:layout_height="140dp"
+        android:padding="8dp"
+        android:gravity="start"
+        android:textSize="20sp"
+        android:background="@android:color/transparent"
+        android:imeOptions="actionDone" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:hint="Share something..."/>
-    
-    <Button
-        android:id="@+id/share_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:text="Share"/>
+        android:gravity="center_vertical"
+        android:elevation="7dp"
+        android:background="@color/backgroundHeader">
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"/>
+
+        <ImageButton
+            android:id="@+id/share_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:src="@drawable/ic_send_black_24dp"
+            android:tint="@android:color/white"
+            style="@style/Widget.AppCompat.Button.Borderless"/>
+
+    </LinearLayout>
+
 </LinearLayout>
