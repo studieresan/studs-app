@@ -23,6 +23,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="18sp"
+            android:maxLines="1"
+            android:ellipsize="end"
             android:text="Tiff's breakfast club"/>
         <TextView
             android:id="@+id/sub_title"

@@ -30,8 +30,9 @@ class OverviewAdapter(val callback: OnLocationSelectedListener) : RecyclerView.A
 
     override fun onBindViewHolder(holder: ViewHolder, pos: Int) {
         val location = dataSource[pos]
+        val user = users.find { it.id == location.user }
         holder.title.text = location.message
-        holder.subTitle.text = "Jake was here"
+        holder.subTitle.text = user?.name ?: "Unknown was here"
         holder.itemView.setOnClickListener {
             callback.onLocationSelected(location)
         }
