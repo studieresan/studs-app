@@ -14,7 +14,7 @@ import se.studieresan.studs.ui.AntiScrollLinearLayoutManager
 
 class TodoFragment: LifecycleFragment(), OnTodoSelectedListener {
     val adapter: TodoAdapter by lazy {
-        TodoAdapter(this)
+        TodoAdapter(this, activity)
     }
     val model: StudsViewModel by lazy {
         ViewModelProviders.of(activity).get(StudsViewModel::class.java)

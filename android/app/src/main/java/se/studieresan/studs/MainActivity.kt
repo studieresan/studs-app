@@ -1,22 +1,18 @@
 package se.studieresan.studs
 
-import android.arch.lifecycle.*
+import android.arch.lifecycle.LifecycleActivity
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.VectorDrawable
 import android.os.Bundle
-import android.support.graphics.drawable.VectorDrawableCompat
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import android.support.v4.graphics.drawable.DrawableCompat
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup import android.widget.ImageButton
+import android.view.ViewGroup
+import android.widget.ImageButton
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -27,7 +23,6 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
@@ -37,6 +32,8 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.FirebaseMessaging
 import se.studieresan.studs.LoginDialogFragment.Companion.RC_SIGN_IN
+import se.studieresan.studs.models.Location
+import se.studieresan.studs.models.Todo
 import se.studieresan.studs.models.User
 import se.studieresan.studs.models.getTimeAgo
 import se.studieresan.studs.ui.SlideupNestedScrollview
@@ -154,19 +151,24 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
         showSharedLocations()
     }
 
+    var selectedPostObserver: Observer<Location>? = null
+    var postsObserver: Observer<List<Location>>? = null
+    var todosObserver: Observer<List<Todo>>? = null
+    var selectedTodoObserver: Observer<Todo>? = null
     fun clear () {
         val model = ViewModelProviders.of(this).get(StudsViewModel::class.java)
-        model.getSelectedPost()?.removeObservers(this)
-        model.getPosts()?.removeObservers(this)
-        model.getTodos()?.removeObservers(this)
-        model.getSelectedTodo()?.removeObservers(this)
+        model.getSelectedPost().removeObserver(selectedPostObserver)
+        model.getPosts()?.removeObserver(postsObserver)
+        model.getTodos()?.removeObserver(todosObserver)
+        model.getSelectedTodo().removeObserver(selectedTodoObserver)
         map?.clear()
+        markerMap = mapOf<String, Marker>()
     }
 
     fun showTodoLocations () {
         clear()
         val model = ViewModelProviders.of(this).get(StudsViewModel::class.java)
-        model?.getTodos()?.observe(this, Observer { todos ->
+        todosObserver = Observer { todos ->
             val map = map ?: return@Observer
             todos?.forEach {
                 val location = LatLng(it.latitude, it.longitude)
@@ -178,21 +180,23 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
                     markerMap += (it.name to marker)
                 }
             }
-        })
+        }
+        model?.getTodos()?.observe(this, todosObserver)
 
-        model?.getSelectedTodo()?.observe(this, Observer { todo ->
+        selectedTodoObserver = Observer { todo ->
             todo ?: return@Observer
             var latLng = LatLng(todo.latitude, todo.longitude)
             map?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15F))
             markerMap[todo.name]?.showInfoWindow()
             if (bottomSheet.isAtTop) bottomSheet.obscure()
-        })
+        }
+        model?.getSelectedTodo()?.observe(this, selectedTodoObserver)
     }
 
     fun showSharedLocations () {
         clear()
         val model = ViewModelProviders.of(this).get(StudsViewModel::class.java)
-        model.getPosts()?.observe(this, Observer { posts ->
+        postsObserver = Observer { posts ->
             val map = map ?: return@Observer
             posts?.forEach {
                 val location = LatLng(it.lat, it.lng)
@@ -205,15 +209,17 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
                     markerMap += (it.key to marker)
                 }
             }
-        })
+        }
+        model.getPosts()?.observe(this, postsObserver)
 
-        model?.getSelectedPost()?.observe(this, Observer { post ->
+        selectedPostObserver = Observer { post ->
             post ?: return@Observer
             val latLng = LatLng(post.lat, post.lng)
             map?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15F))
             markerMap[post.key]?.showInfoWindow()
             if (bottomSheet.isAtTop) bottomSheet.obscure()
-        })
+        }
+        model?.getSelectedPost()?.observe(this, selectedPostObserver)
 
         val location = displayLocation ?: return
         val marker = markerMap[location]
@@ -269,7 +275,10 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
                     switchFragment(1)
                     showSharedLocations()
                 }
-                findViewById(R.id.nav_2).setOnClickListener { switchFragment(2) }
+                findViewById(R.id.nav_2).setOnClickListener {
+                    switchFragment(2)
+                    showSharedLocations()
+                }
                 findViewById(R.id.nav_3).setOnClickListener {
                     switchFragment(3)
                     showTodoLocations()
@@ -287,7 +296,7 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
             2 -> InfoFragment() to "info"
             else -> TodoFragment() to "todo"
         }
-        fragmentTransaction.setCustomAnimations(R.transition.slide_up, R.transition.out)
+        //fragmentTransaction.setCustomAnimations(R.transition.slide_up, R.transition.out)
         fragmentTransaction.replace(R.id.fragment_container, fragment, id)
         fragmentTransaction.commit()
 
