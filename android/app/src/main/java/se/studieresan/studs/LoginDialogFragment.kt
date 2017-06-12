@@ -3,7 +3,6 @@ package se.studieresan.studs
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
 import android.support.v4.app.FragmentManager
-import android.support.v7.app.AppCompatActivity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,7 +18,6 @@ class LoginDialogFragment(val googleApiClient: GoogleApiClient): DialogFragment(
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val v = inflater?.inflate(R.layout.fragment_login, container, false) ?: return null
         v.findViewById(R.id.google_login).setOnClickListener {
-            val activity = context as AppCompatActivity
             val signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient)
             activity.startActivityForResult(signInIntent, RC_SIGN_IN)
         }

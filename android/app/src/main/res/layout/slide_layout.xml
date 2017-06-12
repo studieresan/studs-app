@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:elevation="21dp"
+    android:background="@color/backgroundDark"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <include layout="@layout/navigation_layout"
+        android:id="@+id/top_nav"/>
+
+    <FrameLayout
+        android:orientation="vertical"
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="24dp"
+        android:layout_margin="16dp"
+        android:layout_gravity="bottom"
+        android:scaleType="centerInside"
+        android:src="@drawable/studs"/>
+
+</LinearLayout>
