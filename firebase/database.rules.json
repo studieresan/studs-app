@@ -1,5 +1,8 @@
 {
   "rules": {
+    "static": {
+      ".read": true
+    },
     "users": {
       ".read": "auth != null",
       ".write": "auth != null"
