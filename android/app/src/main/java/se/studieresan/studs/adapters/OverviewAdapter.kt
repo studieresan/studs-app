@@ -12,6 +12,7 @@ import se.studieresan.studs.OnLocationSelectedListener
 import se.studieresan.studs.R
 import se.studieresan.studs.models.Location
 import se.studieresan.studs.models.User
+import se.studieresan.studs.models.getTimeAgo
 import kotlin.properties.Delegates
 
 /**
@@ -36,6 +37,7 @@ class OverviewAdapter(val callback: OnLocationSelectedListener) : RecyclerView.A
         val user = users.find { it.id == location.user }
         holder.title.text = location.message
         holder.subTitle.text = user?.name ?: "Unknown was here"
+        holder.time.text = getTimeAgo(location.timestamp)
         if (user != null) {
             holder.image.circularImage(url = user.picture)
         } else {
@@ -53,6 +55,7 @@ class OverviewAdapter(val callback: OnLocationSelectedListener) : RecyclerView.A
         val title = view.findViewById(R.id.title) as TextView
         val subTitle = view.findViewById(R.id.sub_title) as TextView
         val image = view.findViewById(R.id.image) as ImageView
+        val time = view.findViewById(R.id.time) as TextView
     }
 }
 

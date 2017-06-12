@@ -6,9 +6,11 @@ import android.arch.lifecycle.ViewModel
 import android.util.Log
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.GenericTypeIndicator
 import com.google.firebase.database.ValueEventListener
 import se.studieresan.studs.extensions.FirebaseAPI
 import se.studieresan.studs.models.Location
+import se.studieresan.studs.models.Todo
 import se.studieresan.studs.models.User
 
 
@@ -18,17 +20,29 @@ import se.studieresan.studs.models.User
 class StudsViewModel : ViewModel() {
     companion object {
         val TAG = StudsViewModel::class.java.simpleName
+        val ONE_HOUR = 60*60
     }
     private val locationRef by lazy {
         val db = FirebaseDatabase.getInstance()
-        db.getReference("locations").limitToLast(20)
+        val oneHourAgo = System.currentTimeMillis()/1000 - ONE_HOUR
+        db.getReference("locations").orderByChild("timestamp").startAt(oneHourAgo.toDouble())
     }
     private val userRef by lazy {
         val db = FirebaseDatabase.getInstance()
         db.getReference("users")
     }
+    private val staticRef by lazy {
+        val db = FirebaseDatabase.getInstance()
+        db.getReference("static/faq")
+    }
+    private val todoRef by lazy {
+        val db = FirebaseDatabase.getInstance()
+        db.getReference("static/locations")
+    }
     private var locationListener: ChildEventListener? = null
     private var userListener: ValueEventListener? = null
+    private var staticListener: ValueEventListener? = null
+    private var todoListener: ValueEventListener? = null
 
     private var posts: MutableLiveData<List<Location>>? = null
     fun getPosts(): LiveData<List<Location>>? {
@@ -37,6 +51,19 @@ class StudsViewModel : ViewModel() {
             loadPosts()
         }
         return posts
+    }
+
+    private var todo: MutableLiveData<List<Todo>>? = null
+    fun getTodos(): LiveData<List<Todo>>? {
+        if (todo == null) {
+            todo = MutableLiveData<List<Todo>>()
+            todoListener = FirebaseAPI.createValueEventListener({ snap ->
+                val t = object : GenericTypeIndicator<ArrayList<Todo>>() {}
+                todo?.value = snap.getValue(t)
+            })
+            todoRef.addValueEventListener(todoListener)
+        }
+        return todo
     }
 
     private var users: MutableLiveData<List<User>>? = null
@@ -48,10 +75,28 @@ class StudsViewModel : ViewModel() {
         return users
     }
 
+    private var static: MutableLiveData<String>? = null
+    fun getStatic(): LiveData<String>? {
+        if (static == null) {
+            static = MutableLiveData<String>()
+            staticListener = FirebaseAPI.createValueEventListener({ snap ->
+                static?.value = snap.value as String
+            })
+            staticRef.addValueEventListener(staticListener)
+        }
+        return static
+    }
+
     private var selectedPost: MutableLiveData<Location> = MutableLiveData<Location>()
     fun getSelectedPost(): LiveData<Location> = selectedPost
     fun selectPost(location: Location) {
         selectedPost.value = location
+    }
+
+    private var selectedTodo: MutableLiveData<Todo> = MutableLiveData<Todo>()
+    fun getSelectedTodo(): LiveData<Todo> = selectedTodo
+    fun selectTodo(todo: Todo) {
+        selectedTodo.value = todo
     }
 
     private fun loadPosts() {
@@ -84,6 +129,12 @@ class StudsViewModel : ViewModel() {
         }
         userListener?.let {
             userRef?.removeEventListener(it)
+        }
+        staticListener?.let {
+            staticRef.removeEventListener(it)
+        }
+        todoListener?.let {
+            todoRef.removeEventListener(it)
         }
     }
 

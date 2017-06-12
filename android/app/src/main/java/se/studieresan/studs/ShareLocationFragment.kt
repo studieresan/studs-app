@@ -45,7 +45,8 @@ class ShareLocationFragment: DialogFragment() {
                     lat = location.latitude,
                     lng = location.longitude,
                     message = message,
-                    user = user?.uid
+                    user = user?.uid,
+                    timestamp = System.currentTimeMillis()/1000
             )
             db.push().setValue(data)
             dismiss()

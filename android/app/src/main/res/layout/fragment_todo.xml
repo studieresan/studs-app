@@ -23,12 +23,12 @@
                 android:layout_height="wrap_content"
                 android:padding="16dp"
                 android:gravity="center"
-                android:drawableStart="@drawable/ic_whatshot_black_24dp"
+                android:drawableStart="@drawable/ic_format_list_bulleted_black_24dp"
                 style="@style/HeaderText"
-                android:text="Latests Posts"/>
+                android:text="Things to do"/>
 
             <android.support.v7.widget.RecyclerView
-                android:id="@+id/updates_rv"
+                android:id="@+id/todos_rv"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
         </LinearLayout>

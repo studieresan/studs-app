@@ -3,10 +3,17 @@ package se.studieresan.studs
 import android.arch.lifecycle.*
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.VectorDrawable
 import android.os.Bundle
+import android.support.graphics.drawable.VectorDrawableCompat
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.v4.graphics.drawable.DrawableCompat
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup import android.widget.ImageButton
@@ -20,17 +27,24 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.messaging.FirebaseMessaging
 import se.studieresan.studs.LoginDialogFragment.Companion.RC_SIGN_IN
 import se.studieresan.studs.models.User
+import se.studieresan.studs.models.getTimeAgo
 import se.studieresan.studs.ui.SlideupNestedScrollview
 
 class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, View.OnClickListener {
+    companion object {
+        val FINE_LOCATION = android.Manifest.permission.ACCESS_FINE_LOCATION
+    }
 
     val bottomSheet by lazy {
         findViewById(R.id.slide_up) as SlideupNestedScrollview
@@ -57,7 +71,8 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
     }
     var map: GoogleMap? = null
     var currentUser: FirebaseUser? = null
-    var markerMap: Map<String, MarkerOptions> = emptyMap<String, MarkerOptions>()
+    var markerMap: Map<String, Marker> = emptyMap<String, Marker>()
+    var displayLocation: String? = null
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == RC_SIGN_IN) {
@@ -136,20 +151,58 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
             false
         }
 
-        var firstMarker = true
+        showSharedLocations()
+    }
+
+    fun clear () {
+        val model = ViewModelProviders.of(this).get(StudsViewModel::class.java)
+        model.getSelectedPost()?.removeObservers(this)
+        model.getPosts()?.removeObservers(this)
+        model.getTodos()?.removeObservers(this)
+        model.getSelectedTodo()?.removeObservers(this)
+        map?.clear()
+    }
+
+    fun showTodoLocations () {
+        clear()
+        val model = ViewModelProviders.of(this).get(StudsViewModel::class.java)
+        model?.getTodos()?.observe(this, Observer { todos ->
+            val map = map ?: return@Observer
+            todos?.forEach {
+                val location = LatLng(it.latitude, it.longitude)
+                if (!markerMap.containsKey(it.name)) {
+                    val marker = map.addMarker(
+                            MarkerOptions()
+                                    .position(location)
+                                    .title(it.name))
+                    markerMap += (it.name to marker)
+                }
+            }
+        })
+
+        model?.getSelectedTodo()?.observe(this, Observer { todo ->
+            todo ?: return@Observer
+            var latLng = LatLng(todo.latitude, todo.longitude)
+            map?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15F))
+            markerMap[todo.name]?.showInfoWindow()
+            if (bottomSheet.isAtTop) bottomSheet.obscure()
+        })
+    }
+
+    fun showSharedLocations () {
+        clear()
         val model = ViewModelProviders.of(this).get(StudsViewModel::class.java)
         model.getPosts()?.observe(this, Observer { posts ->
             val map = map ?: return@Observer
             posts?.forEach {
                 val location = LatLng(it.lat, it.lng)
                 if (!markerMap.containsKey(it.key)) {
-                    val marker = MarkerOptions().position(location).title(it.message)
+                    val marker = map.addMarker(
+                            MarkerOptions()
+                                    .position(location)
+                                    .title(it.message)
+                                    .snippet(getTimeAgo(it.timestamp)))
                     markerMap += (it.key to marker)
-                    map.addMarker(marker)
-                }
-                if (firstMarker) {
-                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15F))
-                    firstMarker = false
                 }
             }
         })
@@ -158,15 +211,20 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
             post ?: return@Observer
             val latLng = LatLng(post.lat, post.lng)
             map?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15F))
+            markerMap[post.key]?.showInfoWindow()
             if (bottomSheet.isAtTop) bottomSheet.obscure()
         })
+
+        val location = displayLocation ?: return
+        val marker = markerMap[location]
+        map?.animateCamera(CameraUpdateFactory.newLatLngZoom(marker?.position, 15F))
+        marker?.showInfoWindow()
     }
 
     fun showDeviceLocation () {
-        val fineLocation = android.Manifest.permission.ACCESS_FINE_LOCATION
-        if (ContextCompat.checkSelfPermission(this, fineLocation)
+        if (ContextCompat.checkSelfPermission(this, FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(fineLocation), PERMISSIONS_REQUEST_FINE_LOCATION)
+            ActivityCompat.requestPermissions(this, arrayOf(FINE_LOCATION), PERMISSIONS_REQUEST_FINE_LOCATION)
             return
         }
 
@@ -198,26 +256,36 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
         findViewById(R.id.fab_share).setOnClickListener(this)
         currentUser = auth.currentUser
         setupBottomNav()
+        FirebaseMessaging.getInstance().subscribeToTopic("locations")
+        if (intent.hasExtra("locationKey")) {
+            displayLocation = intent.extras["locationKey"] as String
+        }
     }
 
     private fun setupBottomNav() {
         listOf(R.id.bottom_nav, R.id.top_nav).forEach {
             with (findViewById(it)) {
-                findViewById(R.id.nav_1).setOnClickListener { switchFragment(1) }
+                findViewById(R.id.nav_1).setOnClickListener {
+                    switchFragment(1)
+                    showSharedLocations()
+                }
                 findViewById(R.id.nav_2).setOnClickListener { switchFragment(2) }
-                findViewById(R.id.nav_3).setOnClickListener { switchFragment(3) }
+                findViewById(R.id.nav_3).setOnClickListener {
+                    switchFragment(3)
+                    showTodoLocations()
+                }
             }
         }
-        switchFragment(2)
+        switchFragment(1)
     }
 
     private fun switchFragment(page: Int) {
         slideUp()
         val fragmentTransaction = supportFragmentManager.beginTransaction()
         val (fragment, id) = when (page) {
-            1 -> DummyFragment() to "dummy1"
-            2 -> DummyFragment() to "dummy2"
-            else -> OverviewFragment() to "overview"
+            1 -> OverviewFragment() to "overview"
+            2 -> InfoFragment() to "info"
+            else -> TodoFragment() to "todo"
         }
         fragmentTransaction.setCustomAnimations(R.transition.slide_up, R.transition.out)
         fragmentTransaction.replace(R.id.fragment_container, fragment, id)
