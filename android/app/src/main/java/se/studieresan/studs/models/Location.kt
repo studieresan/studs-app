@@ -1,5 +1,7 @@
 package se.studieresan.studs.models
 
+import se.studieresan.studs.R
+
 data class Location(
         var lat: Double = 0.0,
         var lng: Double = 0.0,
@@ -20,3 +22,22 @@ fun getTimeAgo(timestamp: Long): String {
         return "$minutesAgo minutes ago"
     }
 }
+
+fun getIconForCategory(category: String): Int = when (category) {
+    "eat" -> R.drawable.ic_restaurant_black_24dp
+    "drink" -> R.drawable.ic_local_bar_black_24dp
+    "shopping" -> R.drawable.ic_local_mall_black_24dp
+    "activity" -> R.drawable.ic_local_see_black_24dp
+    "living" -> R.drawable.ic_local_hotel_black_24dp
+    else -> R.drawable.ic_location_on_black_24dp
+}
+
+fun getDescriptionForCategory(category: String, description: String) =
+    if (description.isEmpty()) {
+        when (category) {
+            "eat" -> "Eating"
+            "drink" -> "Drinking"
+            "shopping" -> "Shopping"
+            else -> "Activity"
+        }
+    } else description

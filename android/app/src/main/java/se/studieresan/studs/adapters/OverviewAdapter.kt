@@ -1,5 +1,7 @@
 package se.studieresan.studs.adapters
 
+import android.content.Context
+import android.support.v4.content.ContextCompat
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -10,15 +12,13 @@ import com.bumptech.glide.Glide
 import jp.wasabeef.glide.transformations.CropCircleTransformation
 import se.studieresan.studs.OnLocationSelectedListener
 import se.studieresan.studs.R
-import se.studieresan.studs.models.Location
-import se.studieresan.studs.models.User
-import se.studieresan.studs.models.getTimeAgo
+import se.studieresan.studs.models.*
 import kotlin.properties.Delegates
 
 /**
  * Created by jespersandstrom on 2017-06-07.
  */
-class OverviewAdapter(val callback: OnLocationSelectedListener) : RecyclerView.Adapter<OverviewAdapter.ViewHolder>() {
+class OverviewAdapter(val callback: OnLocationSelectedListener, val context: Context) : RecyclerView.Adapter<OverviewAdapter.ViewHolder>() {
 
     var dataSource: List<Location> by Delegates.observable(emptyList()) { _, _, _ ->
         notifyDataSetChanged()
@@ -35,7 +35,11 @@ class OverviewAdapter(val callback: OnLocationSelectedListener) : RecyclerView.A
     override fun onBindViewHolder(holder: ViewHolder, pos: Int) {
         val location = dataSource[pos]
         val user = users.find { it.id == location.user }
-        holder.title.text = location.message
+        holder.title.text = getDescriptionForCategory(location.category, location.message)
+        val ic = getIconForCategory(location.category)
+        val drawable = ContextCompat.getDrawable(context, ic)
+        drawable.setBounds( 0, 0, 60, 60 );
+        holder.title.setCompoundDrawables(drawable, null, null, null)
         holder.subTitle.text = user?.name ?: "Unknown was here"
         holder.time.text = getTimeAgo(location.timestamp)
         if (user != null) {

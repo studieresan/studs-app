@@ -25,7 +25,7 @@
                 android:gravity="center"
                 android:drawableStart="@drawable/ic_whatshot_black_24dp"
                 style="@style/HeaderText"
-                android:text="Latests Posts"/>
+                android:text="Latests Shares"/>
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/updates_rv"

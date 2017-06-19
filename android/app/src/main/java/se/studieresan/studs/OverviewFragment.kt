@@ -16,7 +16,7 @@ import se.studieresan.studs.ui.AntiScrollLinearLayoutManager
 class OverviewFragment : LifecycleFragment(), OnLocationSelectedListener {
 
     val adapter: OverviewAdapter by lazy {
-        OverviewAdapter(this)
+        OverviewAdapter(this, activity)
     }
     val model: StudsViewModel by lazy {
       ViewModelProviders.of(activity).get(StudsViewModel::class.java)

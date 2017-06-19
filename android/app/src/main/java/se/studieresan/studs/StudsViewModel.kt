@@ -92,11 +92,17 @@ class StudsViewModel : ViewModel() {
     fun selectPost(location: Location) {
         selectedPost.value = location
     }
+    fun unselectPost() {
+        selectedPost.value = null
+    }
 
     private var selectedTodo: MutableLiveData<Todo> = MutableLiveData<Todo>()
     fun getSelectedTodo(): LiveData<Todo> = selectedTodo
     fun selectTodo(todo: Todo) {
         selectedTodo.value = todo
+    }
+    fun unselectTodo() {
+        selectedTodo.value = null
     }
 
     private fun loadPosts() {

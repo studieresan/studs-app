@@ -1,6 +1,5 @@
 package se.studieresan.studs.extensions
 
-import android.util.Log
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -21,8 +20,6 @@ object FirebaseAPI {
             }
 
             override fun onCancelled(error: DatabaseError?) {
-                Log.e(TAG, "Firebase Error: $error")
-                onCancelled(error)
             }
         }
     }

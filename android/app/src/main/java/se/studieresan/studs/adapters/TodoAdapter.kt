@@ -1,6 +1,7 @@
 package se.studieresan.studs.adapters
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.support.v4.content.ContextCompat
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -10,6 +11,7 @@ import android.widget.TextView
 import se.studieresan.studs.OnTodoSelectedListener
 import se.studieresan.studs.R
 import se.studieresan.studs.models.Todo
+import se.studieresan.studs.models.getIconForCategory
 import kotlin.properties.Delegates
 
 class TodoAdapter(val callback: OnTodoSelectedListener, val context: Context) : RecyclerView.Adapter<TodoAdapter.ViewHolder>() {
@@ -23,20 +25,28 @@ class TodoAdapter(val callback: OnTodoSelectedListener, val context: Context) : 
         return ViewHolder(v)
     }
 
+    fun getDrawableForDaynight(daynight: String): Drawable {
+        val ic = when (daynight) {
+            "night" -> R.drawable.ic_brightness_3_black_24dp
+            "day" -> R.drawable.ic_brightness_5_black_24dp
+            else -> R.drawable.ic_brightness_4_black_24dp
+        }
+        val drawable = ContextCompat.getDrawable(context, ic)
+        drawable.setBounds( 0, 0, 60, 60 );
+        return drawable
+    }
+
     override fun onBindViewHolder(holder: ViewHolder, pos: Int) {
         val todo = dataSource[pos]
+        todo ?: return
         holder.title.text = todo.name
-        val ic = when (todo.category) {
-            "eat" -> R.drawable.ic_restaurant_black_24dp
-            "drink" -> R.drawable.ic_local_bar_black_24dp
-            "shopping" -> R.drawable.ic_local_mall_black_24dp
-            "activity" -> R.drawable.ic_local_see_black_24dp
-            else -> R.drawable.ic_location_on_black_24dp
-        }
+        val ic = getIconForCategory(todo.category)
         val drawable = ContextCompat.getDrawable(context, ic)
         drawable.setBounds( 0, 0, 60, 60 );
         holder.title.setCompoundDrawables(drawable, null, null, null)
         holder.subTitle.text = todo.description
+        val daynight = getDrawableForDaynight(todo.daynight)
+        holder.subTitle.setCompoundDrawables(daynight, null, null, null)
 ////        val fallback = holder.itemView.context.getDrawable(R.drawable.ic_location_on_black_24dp)
 ////        holder.image.setImageDrawable(fallback)
         holder.itemView.setOnClickListener {

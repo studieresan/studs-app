@@ -32,10 +32,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.FirebaseMessaging
 import se.studieresan.studs.LoginDialogFragment.Companion.RC_SIGN_IN
-import se.studieresan.studs.models.Location
-import se.studieresan.studs.models.Todo
-import se.studieresan.studs.models.User
-import se.studieresan.studs.models.getTimeAgo
+import se.studieresan.studs.models.*
 import se.studieresan.studs.ui.SlideupNestedScrollview
 
 class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, View.OnClickListener {
@@ -170,7 +167,7 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
         val model = ViewModelProviders.of(this).get(StudsViewModel::class.java)
         todosObserver = Observer { todos ->
             val map = map ?: return@Observer
-            todos?.forEach {
+            todos?.filterNotNull()?.forEach {
                 val location = LatLng(it.latitude, it.longitude)
                 if (!markerMap.containsKey(it.name)) {
                     val marker = map.addMarker(
@@ -189,6 +186,7 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
             map?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15F))
             markerMap[todo.name]?.showInfoWindow()
             if (bottomSheet.isAtTop) bottomSheet.obscure()
+            model.unselectTodo()
         }
         model?.getSelectedTodo()?.observe(this, selectedTodoObserver)
     }
@@ -204,9 +202,15 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
                     val marker = map.addMarker(
                             MarkerOptions()
                                     .position(location)
-                                    .title(it.message)
+                                    .title(getDescriptionForCategory(it.category, it.message))
                                     .snippet(getTimeAgo(it.timestamp)))
                     markerMap += (it.key to marker)
+
+                    if(displayLocation != null && it.key == displayLocation) {
+                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15F))
+                        marker.showInfoWindow()
+                        displayLocation = null
+                    }
                 }
             }
         }
@@ -218,13 +222,9 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
             map?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15F))
             markerMap[post.key]?.showInfoWindow()
             if (bottomSheet.isAtTop) bottomSheet.obscure()
+            model.unselectPost()
         }
         model?.getSelectedPost()?.observe(this, selectedPostObserver)
-
-        val location = displayLocation ?: return
-        val marker = markerMap[location]
-        map?.animateCamera(CameraUpdateFactory.newLatLngZoom(marker?.position, 15F))
-        marker?.showInfoWindow()
     }
 
     fun showDeviceLocation () {
