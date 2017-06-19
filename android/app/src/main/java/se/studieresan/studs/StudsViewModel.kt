@@ -3,7 +3,6 @@ package se.studieresan.studs
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
-import android.util.Log
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.GenericTypeIndicator
@@ -117,7 +116,6 @@ class StudsViewModel : ViewModel() {
 
     private fun loadUsers() {
         userListener = FirebaseAPI.createValueEventListener({ snap ->
-            Log.d(TAG, "new users $snap")
             val newUsers = snap.children.map { data ->
                 val user = data.getValue(User::class.java) ?: return@createValueEventListener
                 user.id = data.key

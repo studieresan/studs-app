@@ -16,7 +16,7 @@ import kotlin.properties.Delegates
 
 class TodoAdapter(val callback: OnTodoSelectedListener, val context: Context) : RecyclerView.Adapter<TodoAdapter.ViewHolder>() {
 
-    var dataSource: List<Todo> by Delegates.observable(emptyList()) { _, _, _ ->
+    var dataSource: List<Todo?> by Delegates.observable(emptyList()) { _, _, _ ->
         notifyDataSetChanged()
     }
 
@@ -37,8 +37,7 @@ class TodoAdapter(val callback: OnTodoSelectedListener, val context: Context) : 
     }
 
     override fun onBindViewHolder(holder: ViewHolder, pos: Int) {
-        val todo = dataSource[pos]
-        todo ?: return
+        val todo = dataSource[pos] ?: return
         holder.title.text = todo.name
         val ic = getIconForCategory(todo.category)
         val drawable = ContextCompat.getDrawable(context, ic)
