@@ -2,46 +2,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:elevation="7dp">
-        <ImageButton
-            android:id="@+id/activity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:tint="@color/colorAccent"
-            android:backgroundTint="@color/colorPrimary"
-            android:src="@drawable/ic_local_see_black_24dp" />
-        <ImageButton
-            android:id="@+id/eat"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/colorPrimary"
-            android:tint="@android:color/white"
-            android:src="@drawable/ic_restaurant_black_24dp" />
-        <ImageButton
-            android:id="@+id/drink"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/colorPrimary"
-            android:tint="@android:color/white"
-            android:src="@drawable/ic_local_bar_black_24dp" />
-        <ImageButton
-            android:id="@+id/shopping"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/colorPrimary"
-            android:tint="@android:color/white"
-            android:src="@drawable/ic_local_mall_black_24dp" />
-    </LinearLayout>
 
     <EditText
         android:id="@+id/message"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="144dp"
         android:padding="8dp"
         android:gravity="start"
         android:textSize="20sp"
@@ -56,6 +21,35 @@
         android:gravity="center_vertical"
         android:elevation="7dp"
         android:background="@color/backgroundHeader">
+
+        <ImageButton
+            android:id="@+id/activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:tint="@color/colorAccent"
+            android:backgroundTint="@android:color/transparent"
+            android:src="@drawable/ic_local_see_black_24dp" />
+        <ImageButton
+            android:id="@+id/eat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@android:color/transparent"
+            android:tint="@android:color/white"
+            android:src="@drawable/ic_restaurant_black_24dp" />
+        <ImageButton
+            android:id="@+id/drink"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@android:color/transparent"
+            android:tint="@android:color/white"
+            android:src="@drawable/ic_local_bar_black_24dp" />
+        <ImageButton
+            android:id="@+id/shopping"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@android:color/transparent"
+            android:tint="@android:color/white"
+            android:src="@drawable/ic_local_mall_black_24dp" />
 
         <View
             android:layout_width="0dp"

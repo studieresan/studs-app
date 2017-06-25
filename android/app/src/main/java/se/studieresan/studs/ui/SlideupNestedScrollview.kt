@@ -53,8 +53,10 @@ class SlideupNestedScrollview : NestedScrollView {
         }
     }
 
+    var paddingSet = false
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        if (paddingTop == 0) {
+        if (paddingTop == 0 && !paddingSet) {
+            paddingSet = true
             val adjustedTopPadding = (height - peekHeight).toInt()
             setPadding(paddingLeft, adjustedTopPadding, paddingRight, paddingBottom)
         }
