@@ -10,8 +10,7 @@ object FirebaseAPI {
     private val TAG = FirebaseAPI::class.java.simpleName
 
     fun createValueEventListener(
-            onData: (DataSnapshot) -> Unit,
-            onCancelled: (DatabaseError) -> Unit = {}
+            onData: (DataSnapshot) -> Unit
     ): ValueEventListener {
         return object: ValueEventListener {
             override fun onDataChange(snap: DataSnapshot?) {
@@ -19,8 +18,7 @@ object FirebaseAPI {
                 onData(snap)
             }
 
-            override fun onCancelled(error: DatabaseError?) {
-            }
+            override fun onCancelled(error: DatabaseError?) {}
         }
     }
 

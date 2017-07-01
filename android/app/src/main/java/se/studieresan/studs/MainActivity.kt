@@ -1,7 +1,6 @@
 package se.studieresan.studs
 
 import android.arch.lifecycle.LifecycleActivity
-import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -13,11 +12,6 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
-import com.google.android.gms.auth.api.Auth
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -28,109 +22,57 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.FirebaseMessaging
-import se.studieresan.studs.LoginDialogFragment.Companion.RC_SIGN_IN
-import se.studieresan.studs.models.*
+import se.studieresan.studs.components.Posts.OverviewFragment
+import se.studieresan.studs.components.Share.LoginDialogFragment
+import se.studieresan.studs.components.Share.ShareLocationFragment
+import se.studieresan.studs.components.Todos.TodoFragment
+import se.studieresan.studs.components.TravelInfo.InfoFragment
+import se.studieresan.studs.extensions.GoogleAuthAPI
+import se.studieresan.studs.extensions.observeNotNull
+import se.studieresan.studs.models.User
+import se.studieresan.studs.models.getDescriptionForCategory
+import se.studieresan.studs.models.getTimeAgo
 import se.studieresan.studs.ui.SlideupNestedScrollview
 
-class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, View.OnClickListener {
+class MainActivity : LifecycleActivity(), OnMapReadyCallback, View.OnClickListener {
+
     companion object {
         val FINE_LOCATION = android.Manifest.permission.ACCESS_FINE_LOCATION
+        val TAG = MainActivity::class.java.simpleName!!
     }
-
+    val PERMISSIONS_REQUEST_FINE_LOCATION = 1
+    val PERMISSIONS_REQUEST_IGNORE = 2
     val bottomSheet by lazy {
         findViewById(R.id.slide_up) as SlideupNestedScrollview
     }
     val mapFragment by lazy {
         supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
     }
-    val gso by lazy {
-        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build()
-    }
-    val googleApi by lazy {
-        GoogleApiClient.Builder(this)
-                .enableAutoManage(this, this)
-                .addConnectionCallbacks(this)
-                .addApi(LocationServices.API)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build()
-    }
-    val auth by lazy {
-        FirebaseAuth.getInstance()
-    }
     var map: GoogleMap? = null
     var currentUser: FirebaseUser? = null
-    var markerMap: Map<String, Marker> = emptyMap<String, Marker>()
+    var todoMarkerMap: Map<String, Marker> = emptyMap()
+    var postMarkerMap: Map<String, Marker> = emptyMap()
     var displayLocation: String? = null
+    var loginFragment: LoginDialogFragment? = null
+    val model: StudsViewModel by lazy {
+        ViewModelProviders.of(this).get(StudsViewModel::class.java)
+    }
+    val googleAuthApi = GoogleAuthAPI(this)
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == RC_SIGN_IN) {
-            val result = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
-
-            if (result.isSuccess) {
-                result.signInAccount?.let {
-                    firebaseAuthWithUser(it)
-                }
-            } else {
-                Log.e(TAG, "${result.status}")
+        googleAuthApi.googleSigninResult(requestCode, data) {
+            val db = FirebaseDatabase.getInstance()
+            currentUser = it
+            currentUser?.apply {
+                val user = User(displayName, email, photoUrl?.toString(), uid)
+                db.getReference("users").child(uid).setValue(user)
+                loginFragment?.dismiss()
             }
+            ShareLocationFragment().display(supportFragmentManager)
         }
     }
-
-    private fun firebaseAuthWithUser(user: GoogleSignInAccount) {
-        val credential = GoogleAuthProvider.getCredential(user.idToken, null)
-
-        auth.signInWithCredential(credential).addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                loginDialog?.dismiss()
-                currentUser = auth.currentUser
-                val db = FirebaseDatabase.getInstance()
-                currentUser?.apply {
-                    val user = User(displayName, email, photoUrl?.toString(), uid)
-                    db.getReference("users").child(uid).setValue(user)
-                }
-                ShareLocationFragment().display(supportFragmentManager)
-            }
-        }
-    }
-
-    override fun onClick(v: View?) {
-        when (v?.id) {
-            R.id.fab_my_location -> showDeviceLocation()
-            R.id.fab_share ->
-                if (currentUser != null) {
-                    ShareLocationFragment().display(supportFragmentManager)
-                } else {
-                    loginDialog = LoginDialogFragment(googleApi)
-                    loginDialog?.display(supportFragmentManager)
-                }
-        }
-    }
-
-    var loginDialog: LoginDialogFragment? = null
-
-    val TAG = MainActivity::class.java.simpleName
-
-    override fun onConnected(p0: Bundle?) {
-        Log.d(TAG, "Connected")
-    }
-
-    override fun onConnectionSuspended(p0: Int) {
-        Log.d(TAG, "Connection suspended")
-    }
-
-    override fun onConnectionFailed(p0: ConnectionResult) {
-        Log.d(TAG, "Connection failed")
-    }
-
-    val PERMISSIONS_REQUEST_FINE_LOCATION = 1
-    val PERMISSIONS_REQUEST_IGNORE = 2
-
     override fun onMapReady(googleMap: GoogleMap?) {
         Log.d(TAG, "mapFragment ready")
         map = googleMap
@@ -145,66 +87,38 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
             false
         }
 
-        showSharedLocations()
+        getPosts()
+        getTodos()
     }
 
-    var selectedPostObserver: Observer<Location>? = null
-    var postsObserver: Observer<List<Location>>? = null
-    var todosObserver: Observer<List<Todo>>? = null
-    var selectedTodoObserver: Observer<Todo>? = null
-    fun clear () {
-        val model = ViewModelProviders.of(this).get(StudsViewModel::class.java)
-        model.getSelectedPost().removeObserver(selectedPostObserver)
-        model.getPosts()?.removeObserver(postsObserver)
-        model.getTodos()?.removeObserver(todosObserver)
-        model.getSelectedTodo().removeObserver(selectedTodoObserver)
-        map?.clear()
-        markerMap = mapOf<String, Marker>()
-    }
-
-    fun showTodoLocations () {
-        clear()
-        val model = ViewModelProviders.of(this).get(StudsViewModel::class.java)
-        todosObserver = Observer { todos ->
-            val map = map ?: return@Observer
-            todos?.filterNotNull()?.forEach {
+    fun getTodos() {
+        model.getTodos()?.observeNotNull(this) { todos ->
+            val map = map ?: return@observeNotNull
+            todos.filterNotNull().forEach {
                 val location = LatLng(it.latitude, it.longitude)
-                if (!markerMap.containsKey(it.name)) {
+                if (!todoMarkerMap.containsKey(it.name)) {
                     val marker = map.addMarker(
                             MarkerOptions()
                                     .position(location)
                                     .title(it.name))
-                    markerMap += (it.name to marker)
+                    todoMarkerMap += (it.name to marker)
                 }
             }
         }
-        model?.getTodos()?.observe(this, todosObserver)
-
-        selectedTodoObserver = Observer { todo ->
-            todo ?: return@Observer
-            var latLng = LatLng(todo.latitude, todo.longitude)
-            map?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15F))
-            markerMap[todo.name]?.showInfoWindow()
-            if (bottomSheet.isAtTop) bottomSheet.obscure()
-            model.unselectTodo()
-        }
-        model?.getSelectedTodo()?.observe(this, selectedTodoObserver)
     }
 
-    fun showSharedLocations () {
-        clear()
-        val model = ViewModelProviders.of(this).get(StudsViewModel::class.java)
-        postsObserver = Observer { posts ->
-            val map = map ?: return@Observer
-            posts?.forEach {
+    fun getPosts() {
+        model.getPosts()?.observeNotNull(this) { posts ->
+            val map = map ?: return@observeNotNull
+            posts.forEach {
                 val location = LatLng(it.lat, it.lng)
-                if (!markerMap.containsKey(it.key)) {
+                if (!postMarkerMap.containsKey(it.key)) {
                     val marker = map.addMarker(
                             MarkerOptions()
                                     .position(location)
                                     .title(getDescriptionForCategory(it.category, it.message))
                                     .snippet(getTimeAgo(it.timestamp)))
-                    markerMap += (it.key to marker)
+                    postMarkerMap += (it.key to marker)
 
                     if(displayLocation != null && it.key == displayLocation) {
                         map.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15F))
@@ -214,17 +128,6 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
                 }
             }
         }
-        model.getPosts()?.observe(this, postsObserver)
-
-        selectedPostObserver = Observer { post ->
-            post ?: return@Observer
-            val latLng = LatLng(post.lat, post.lng)
-            map?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15F))
-            markerMap[post.key]?.showInfoWindow()
-            if (bottomSheet.isAtTop) bottomSheet.obscure()
-            model.unselectPost()
-        }
-        model?.getSelectedPost()?.observe(this, selectedPostObserver)
     }
 
     fun showDeviceLocation () {
@@ -238,9 +141,11 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
             isMyLocationEnabled = true
             uiSettings.isMyLocationButtonEnabled = false
             val location = LocationServices.FusedLocationApi
-                    .getLastLocation(googleApi)
-            val latLng = LatLng(location.latitude, location.longitude)
-            animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15F))
+                    .getLastLocation(googleAuthApi.googleApi)
+            location?.let {
+                val latLng = LatLng(location.latitude, location.longitude)
+                animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15F))
+            }
         }
     }
 
@@ -256,13 +161,25 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        googleApi.connect()
-        mapFragment.getMapAsync(this)
+
+        FirebaseMessaging.getInstance().subscribeToTopic("locations")
+
         findViewById(R.id.fab_my_location).setOnClickListener(this)
         findViewById(R.id.fab_share).setOnClickListener(this)
-        currentUser = auth.currentUser
         setupBottomNav()
-        FirebaseMessaging.getInstance().subscribeToTopic("locations")
+
+        model.getSelectedPost().observeNotNull(this) { (lat, lng, _, key) ->
+            animateToMarker(LatLng(lat, lng), key, postMarkerMap)
+            model.unselectPost()
+        }
+        model.getSelectedTodo().observeNotNull(this) { todo ->
+            animateToMarker(LatLng(todo.latitude, todo.longitude), todo.name, todoMarkerMap)
+            model.unselectTodo()
+        }
+        mapFragment.getMapAsync(this)
+
+        currentUser = FirebaseAuth.getInstance().currentUser
+
         if (intent.hasExtra("locationKey")) {
             displayLocation = intent.extras["locationKey"] as String
         }
@@ -273,15 +190,16 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
             with (findViewById(it)) {
                 findViewById(R.id.nav_1).setOnClickListener {
                     switchFragment(1)
-                    showSharedLocations()
+                    todoMarkerMap.values.forEach { it.isVisible = false }
+                    postMarkerMap.values.forEach { it.isVisible = true }
                 }
                 findViewById(R.id.nav_2).setOnClickListener {
                     switchFragment(2)
-                    showSharedLocations()
                 }
                 findViewById(R.id.nav_3).setOnClickListener {
                     switchFragment(3)
-                    showTodoLocations()
+                    postMarkerMap.values.forEach { it.isVisible = false }
+                    todoMarkerMap.values.forEach { it.isVisible = true }
                 }
             }
         }
@@ -296,7 +214,7 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
             2 -> InfoFragment() to "info"
             else -> TodoFragment() to "todo"
         }
-        //fragmentTransaction.setCustomAnimations(R.transition.slide_up, R.transition.out)
+//        fragmentTransaction.setCustomAnimations(R.anim.slide_up, R.anim.out)
         fragmentTransaction.replace(R.id.fragment_container, fragment, id)
         fragmentTransaction.commit()
 
@@ -304,7 +222,8 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
             with (findViewById(nav) as ViewGroup) {
                 (0..childCount - 1).forEach {
                     if (it == page - 1) {
-                        (getChildAt(it) as ImageButton).setColorFilter(resources.getColor(R.color.colorAccent))
+                        val accent = ContextCompat.getColor(this@MainActivity, R.color.colorAccent)
+                        (getChildAt(it) as ImageButton).setColorFilter(accent)
                     } else {
                         (getChildAt(it) as ImageButton).setColorFilter(Color.WHITE)
                     }
@@ -313,16 +232,31 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, GoogleApiClient.On
         }
     }
 
-    private fun slideUp() {
-        bottomSheet.preview()
-    }
-
-    override fun onBackPressed() {
+    override fun onBackPressed() =
         if (bottomSheet.isAtTop) {
             bottomSheet.obscure()
         } else {
             super.onBackPressed()
         }
+
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.fab_my_location -> showDeviceLocation()
+            R.id.fab_share ->
+                if (currentUser != null) {
+                    ShareLocationFragment().display(supportFragmentManager)
+                } else {
+                    loginFragment = LoginDialogFragment(googleAuthApi)
+                    loginFragment?.display(supportFragmentManager)
+                }
+        }
     }
 
+    private fun animateToMarker(latLng: LatLng, markerKey: String, markerMap: Map<String, Marker>) {
+        map?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15F))
+        markerMap[markerKey]?.showInfoWindow()
+        if (bottomSheet.isAtTop) bottomSheet.obscure()
+    }
+
+    private fun slideUp() = bottomSheet.preview()
 }

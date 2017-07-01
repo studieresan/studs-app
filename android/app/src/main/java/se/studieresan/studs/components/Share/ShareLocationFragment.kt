@@ -1,4 +1,4 @@
-package se.studieresan.studs
+package se.studieresan.studs.components.Share
 
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
@@ -16,6 +16,8 @@ import android.widget.ImageButton
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import se.studieresan.studs.MainActivity
+import se.studieresan.studs.R
 import se.studieresan.studs.models.Location
 
 class ShareLocationFragment: DialogFragment(), View.OnClickListener {
@@ -75,7 +77,7 @@ class ShareLocationFragment: DialogFragment(), View.OnClickListener {
 
             val user = FirebaseAuth.getInstance().currentUser
             val location = LocationServices.FusedLocationApi
-                    .getLastLocation(ctx.googleApi)
+                    .getLastLocation(ctx.googleAuthApi.googleApi)
             val data = Location(
                     lat = location.latitude,
                     lng = location.longitude,

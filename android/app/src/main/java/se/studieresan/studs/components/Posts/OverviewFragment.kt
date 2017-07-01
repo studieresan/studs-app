@@ -1,14 +1,17 @@
-package se.studieresan.studs
+package se.studieresan.studs.components.Posts
 
 import android.arch.lifecycle.LifecycleFragment
-import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import se.studieresan.studs.OnLocationSelectedListener
+import se.studieresan.studs.R
+import se.studieresan.studs.StudsViewModel
 import se.studieresan.studs.adapters.OverviewAdapter
+import se.studieresan.studs.extensions.observeNotNull
 import se.studieresan.studs.models.Location
 import se.studieresan.studs.ui.AntiScrollLinearLayoutManager
 
@@ -36,14 +39,12 @@ class OverviewFragment : LifecycleFragment(), OnLocationSelectedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val model = ViewModelProviders.of(activity).get(StudsViewModel::class.java)
-        model.getPosts()?.observe(this, Observer { posts ->
-            posts ?: return@Observer
+        model.getPosts()?.observeNotNull(this) { posts ->
             adapter.dataSource = posts
-        })
-        model.getUsers()?.observe(this, Observer {  users ->
-            users ?: return@Observer
+        }
+        model.getUsers()?.observeNotNull(this) { users ->
             adapter.users = users
-        })
+        }
     }
 
     override fun onLocationSelected(location: Location) {
