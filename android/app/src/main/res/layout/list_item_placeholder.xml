@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:text="No recent shares"
         android:layout_gravity="center"
-        android:textSize="20sp"
+        android:textSize="@dimen/font_size_large"
         />
 
 </FrameLayout>

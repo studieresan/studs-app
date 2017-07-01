@@ -7,18 +7,18 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="se.studieresan.studs.components.Login.LoginActivity"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="@dimen/margin_normal"
     tools:showIn="@layout/activity_login"
     android:gravity="center">
 
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="name" />
+        android:hint="@string/hint_login_name" />
 
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="password" />
+        android:hint="@string/hint_login_password" />
 
 </LinearLayout>

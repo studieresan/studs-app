@@ -32,8 +32,6 @@ import se.studieresan.studs.components.TravelInfo.InfoFragment
 import se.studieresan.studs.extensions.GoogleAuthAPI
 import se.studieresan.studs.extensions.observeNotNull
 import se.studieresan.studs.models.User
-import se.studieresan.studs.models.getDescriptionForCategory
-import se.studieresan.studs.models.getTimeAgo
 import se.studieresan.studs.ui.SlideupNestedScrollview
 
 class MainActivity : LifecycleActivity(), OnMapReadyCallback, View.OnClickListener {
@@ -116,12 +114,12 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, View.OnClickListen
                     val marker = map.addMarker(
                             MarkerOptions()
                                     .position(location)
-                                    .title(getDescriptionForCategory(it.category, it.message))
-                                    .snippet(getTimeAgo(it.timestamp)))
-                    postMarkerMap += (it.key to marker)
+                                    .title(it.getDescriptionForCategory())
+                                    .snippet(it.getTimeAgo()))
+                    postMarkerMap += it.key to marker
 
-                    if(displayLocation != null && it.key == displayLocation) {
-                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15F))
+                    if (displayLocation != null && it.key == displayLocation) {
+                        animateToMarker(location, it.key, postMarkerMap)
                         marker.showInfoWindow()
                         displayLocation = null
                     }

@@ -8,10 +8,10 @@
 
     <ImageView
         android:id="@+id/image"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_width="@dimen/list_item_icon_size"
+        android:layout_height="@dimen/list_item_icon_size"
+        android:layout_marginStart="@dimen/margin_normal"
+        android:layout_marginEnd="@dimen/margin_normal"
         android:tint="@color/colorPrimary"
         android:src="@drawable/ic_person_black_24dp"/>
 
@@ -25,25 +25,22 @@
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
+            android:textSize="@dimen/list_item_title_size"
             android:maxLines="1"
             android:ellipsize="end"
             android:drawableTint="@color/colorAccent"
-            android:drawableStart="@drawable/ic_location_on_black_24dp"
-            android:drawablePadding="8dp"
-            android:layout_marginEnd="16dp"
-            android:text="Tiff's breakfast club"/>
+            android:drawablePadding="@dimen/margin_small"
+            android:layout_marginEnd="@dimen/margin_normal"/>
         <TextView
             android:id="@+id/sub_title"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Jakob was here"/>
+            android:layout_height="wrap_content"/>
     </LinearLayout>
 
     <TextView
         android:id="@+id/time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"/>
+        android:layout_marginEnd="@dimen/margin_normal"/>
 
 </LinearLayout>

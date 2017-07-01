@@ -3,26 +3,23 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="16dp"
+    android:padding="@dimen/margin_normal"
     android:background="?attr/selectableItemBackground"
     android:clickable="true">
         <TextView
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
+            android:textSize="@dimen/list_item_title_size"
             android:maxLines="1"
             android:ellipsize="end"
             android:drawableTint="@color/colorAccent"
-            android:drawableStart="@drawable/ic_location_on_black_24dp"
-            android:drawablePadding="8dp"
-            android:layout_marginBottom="8dp"
-            android:text="Tiff's breakfast"/>
+            android:drawablePadding="@dimen/margin_small"
+            android:layout_marginBottom="@dimen/margin_small"/>
         <TextView
             android:id="@+id/sub_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:drawableTint="@color/colorPrimary"
-            android:drawablePadding="8dp"
-            android:text="Jakob was here"/>
+            android:drawablePadding="@dimen/margin_small"/>
 </LinearLayout>
