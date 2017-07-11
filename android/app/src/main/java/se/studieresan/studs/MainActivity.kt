@@ -48,16 +48,16 @@ class MainActivity : LifecycleActivity(), OnMapReadyCallback, View.OnClickListen
     val mapFragment by lazy {
         supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
     }
+    val model: StudsViewModel by lazy {
+        ViewModelProviders.of(this).get(StudsViewModel::class.java)
+    }
+    val googleAuthApi = GoogleAuthAPI(this)
     var map: GoogleMap? = null
     var currentUser: FirebaseUser? = null
     var todoMarkerMap: Map<String, Marker> = emptyMap()
     var postMarkerMap: Map<String, Marker> = emptyMap()
     var displayLocation: String? = null
     var loginFragment: LoginDialogFragment? = null
-    val model: StudsViewModel by lazy {
-        ViewModelProviders.of(this).get(StudsViewModel::class.java)
-    }
-    val googleAuthApi = GoogleAuthAPI(this)
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         googleAuthApi.googleSigninResult(requestCode, data) {

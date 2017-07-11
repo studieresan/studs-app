@@ -40,10 +40,10 @@ class StudsViewModel : ViewModel() {
         selectedTodo.value = null
     }
 
-    fun getUsers(): LiveData<List<User>>? = userRepo.getUsers()
-    fun getTodos(): LiveData<List<Todo>>? = todoRepo.getTodos()
-    fun getPosts(): LiveData<List<Location>>? = postRepo.getPosts()
-    fun getStaticContent(): LiveData<String>? = staticRepo.getStatic()
+    fun getUsers(): LiveData<List<User>>? = userRepo.load()
+    fun getTodos(): LiveData<List<Todo>>? = todoRepo.load()
+    fun getPosts(): LiveData<List<Location>>? = postRepo.load()
+    fun getStaticContent(): LiveData<String>? = staticRepo.load()
 
     override fun onCleared() {
         super.onCleared()

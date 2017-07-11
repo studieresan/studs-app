@@ -1,35 +1,12 @@
 package se.studieresan.studs.data
 
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import se.studieresan.studs.extensions.FirebaseAPI
+import com.google.firebase.database.DataSnapshot
 
 /**
  * Source of static content such as the travel information.
  */
-class StaticRepo {
+class StaticRepo : FirebaseRepo<String>("static/faq") {
 
-    private val staticRef by lazy {
-        val db = FirebaseDatabase.getInstance()
-        db.getReference("static/faq")
-    }
-    private var staticListener: ValueEventListener? = null
-    private var static: MutableLiveData<String>? = null
-
-    fun getStatic(): LiveData<String>? =
-            if (static == null) {
-                static = MutableLiveData<String>()
-                staticListener = FirebaseAPI.createValueEventListener({ snap ->
-                    static?.value = snap.value as String
-                })
-                staticRef.addValueEventListener(staticListener)
-                static
-            } else static
-
-    fun clear() = staticListener?.let {
-        staticRef.removeEventListener(it)
-    }
+    override fun convertSnap(snap: DataSnapshot) = snap.value as String
 
 }
