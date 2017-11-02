@@ -1,4 +1,4 @@
-package se.studieresan.studs
+package se.studieresan.studs.components.Todos
 
 import android.arch.lifecycle.LifecycleFragment
 import android.arch.lifecycle.Observer
@@ -8,6 +8,9 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import se.studieresan.studs.OnTodoSelectedListener
+import se.studieresan.studs.R
+import se.studieresan.studs.StudsViewModel
 import se.studieresan.studs.adapters.TodoAdapter
 import se.studieresan.studs.models.Todo
 import se.studieresan.studs.ui.AntiScrollLinearLayoutManager
@@ -31,7 +34,7 @@ class TodoFragment: LifecycleFragment(), OnTodoSelectedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        model.getTodos()?.observe(this, Observer {  todos ->
+        model.getTodos()?.observe(this, Observer { todos ->
             todos ?: return@Observer
             adapter.dataSource = todos
         })

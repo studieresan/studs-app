@@ -10,17 +10,28 @@ data class Location(
         var user: String? = "",
         var timestamp: Long = 0,
         var category: String = ""
-)
+) {
 
-fun getTimeAgo(timestamp: Long): String {
-    val minutesAgo = (System.currentTimeMillis()/1000 - timestamp)/60
-    if (minutesAgo.toInt() == 0) {
-        return "just now"
-    } else if (minutesAgo.toInt() == 1) {
-        return "a minute ago"
-    } else {
-        return "$minutesAgo minutes ago"
+    fun getTimeAgo(): String {
+        val minutesAgo = (System.currentTimeMillis()/1000 - timestamp)/60
+        if (minutesAgo.toInt() == 0) {
+            return "just now"
+        } else if (minutesAgo.toInt() == 1) {
+            return "a minute ago"
+        } else {
+            return "$minutesAgo minutes ago"
+        }
     }
+
+    fun getDescriptionForCategory() =
+            if (message.isEmpty()) {
+                when (category) {
+                    "eat" -> "Eating"
+                    "drink" -> "Drinking"
+                    "shopping" -> "Shopping"
+                    else -> "Activity"
+                }
+            } else message
 }
 
 fun getIconForCategory(category: String): Int = when (category) {
@@ -31,13 +42,3 @@ fun getIconForCategory(category: String): Int = when (category) {
     "living" -> R.drawable.ic_local_hotel_black_24dp
     else -> R.drawable.ic_location_on_black_24dp
 }
-
-fun getDescriptionForCategory(category: String, description: String) =
-    if (description.isEmpty()) {
-        when (category) {
-            "eat" -> "Eating"
-            "drink" -> "Drinking"
-            "shopping" -> "Shopping"
-            else -> "Activity"
-        }
-    } else description

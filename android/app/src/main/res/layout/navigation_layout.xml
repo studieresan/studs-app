@@ -19,16 +19,16 @@
     <ImageButton
         android:id="@+id/nav_2"
         android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:layout_marginTop="6dp"
+        android:layout_height="@dimen/bottom_nav_icon_height"
+        android:layout_marginTop="@dimen/bottom_nav_icon_margin_top"
         style="@style/Widget.AppCompat.Button.Borderless"
         android:src="@drawable/ic_info_outline_black_24dp" />
 
     <ImageButton
         android:id="@+id/nav_3"
         android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:layout_marginTop="6dp"
+        android:layout_height="@dimen/bottom_nav_icon_height"
+        android:layout_marginTop="@dimen/bottom_nav_icon_margin_top"
         style="@style/Widget.AppCompat.Button.Borderless"
         android:src="@drawable/ic_format_list_bulleted_black_24dp"
         android:tint="@color/colorPrimary" />

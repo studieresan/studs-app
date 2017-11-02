@@ -12,7 +12,9 @@ import com.bumptech.glide.Glide
 import jp.wasabeef.glide.transformations.CropCircleTransformation
 import se.studieresan.studs.OnLocationSelectedListener
 import se.studieresan.studs.R
-import se.studieresan.studs.models.*
+import se.studieresan.studs.models.Location
+import se.studieresan.studs.models.User
+import se.studieresan.studs.models.getIconForCategory
 import kotlin.properties.Delegates
 
 /** * Created by jespersandstrom on 2017-06-07. */
@@ -45,13 +47,13 @@ class OverviewAdapter(val callback: OnLocationSelectedListener, val context: Con
         if (holder is ViewHolder) {
            val location = dataSource[pos]
            val user = users.find { it.id == location.user }
-           holder.title.text = getDescriptionForCategory(location.category, location.message)
+           holder.title.text = location.getDescriptionForCategory()
            val ic = getIconForCategory(location.category)
            val drawable = ContextCompat.getDrawable(context, ic)
            drawable.setBounds( 0, 0, 60, 60 );
            holder.title.setCompoundDrawables(drawable, null, null, null)
            holder.subTitle.text = user?.name ?: "Unknown was here"
-           holder.time.text = getTimeAgo(location.timestamp)
+           holder.time.text = location.getTimeAgo()
            if (user != null) {
                holder.image.circularImage(url = user.picture)
            } else {

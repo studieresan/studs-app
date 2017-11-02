@@ -1,5 +1,6 @@
 package se.studieresan.studs.extensions
 
+import android.util.Log
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -10,8 +11,7 @@ object FirebaseAPI {
     private val TAG = FirebaseAPI::class.java.simpleName
 
     fun createValueEventListener(
-            onData: (DataSnapshot) -> Unit,
-            onCancelled: (DatabaseError) -> Unit = {}
+            onData: (DataSnapshot) -> Unit
     ): ValueEventListener {
         return object: ValueEventListener {
             override fun onDataChange(snap: DataSnapshot?) {
@@ -20,6 +20,7 @@ object FirebaseAPI {
             }
 
             override fun onCancelled(error: DatabaseError?) {
+                Log.d(TAG, "Firebase error: code: ${error?.code}\nmessage: ${error?.message}\ndescription: ${error?.details}")
             }
         }
     }
@@ -34,6 +35,7 @@ object FirebaseAPI {
         return object: ChildEventListener {
             override fun onCancelled(error: DatabaseError?) {
                 error ?: return
+                Log.d(TAG, "Firebase error: code: ${error.code}\nmessage: ${error.message}\ndescription: ${error.details}")
                 onCancelled(error)
             }
 

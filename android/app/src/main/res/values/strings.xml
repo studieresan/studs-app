@@ -7,4 +7,9 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="share_hint">What do you want to share?</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="title_todo_fragment">Things to do</string>
+    <string name="title_post_fragment">Latests Shares</string>
+    <string name="hint_login_name">name</string>
+    <string name="hint_login_password">password</string>
 </resources>
