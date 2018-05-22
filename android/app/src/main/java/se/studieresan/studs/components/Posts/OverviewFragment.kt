@@ -10,6 +10,7 @@ import com.spotify.mobius.disposables.Disposable
 import kotlinx.android.synthetic.main.fragment_overview.*
 import se.studieresan.studs.*
 import se.studieresan.studs.adapters.OverviewAdapter
+import se.studieresan.studs.components.register.RegisterFragment
 import se.studieresan.studs.domain.SelectActivity
 import se.studieresan.studs.domain.StudsModel
 import se.studieresan.studs.models.Activity
@@ -46,7 +47,7 @@ class OverviewFragment : Fragment(), OnLocationSelectedListener {
                             model.users
                     )
                 }
-                val isLoading = model.loadingAllUsers || model.loadingActivities
+                val isLoading = model.isLoadingAllUsers || model.isLoadingActivities
                 shares_progress.show(isLoading)
                 updates_rv.show(!isLoading)
             }
@@ -62,8 +63,10 @@ class OverviewFragment : Fragment(), OnLocationSelectedListener {
         super.onPause()
     }
 
-    override fun onLocationSelected(location: Activity) {
-        (activity as MainActivity).dispatch(SelectActivity(activityId = location.id))
-    }
+    override fun onShowActivity(showActivity: Activity) =
+        (activity as MainActivity).dispatch(SelectActivity(activityId = showActivity.id))
+
+    override fun onRegisterForActivity(activity: Activity) =
+        RegisterFragment.display(activity.id, fragmentManager!!)
 
 }

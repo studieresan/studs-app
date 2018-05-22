@@ -11,74 +11,20 @@ fun update(model: StudsModel, event: StudsEvent): Next<StudsModel, StudsEffect> 
             is LoadedCities ->
                 next(model.copy(
                         citites = event.cities,
-                        loadingCities = false
+                        isLoadingCities = false
                 ))
 
             is LoadedActivities ->
                 next(model.copy(
                         activities = model.activities.unionBy(event.activities) { a, b -> a.id == b.id },
-                        loadingActivities = false
+                        isLoadingActivities = false
                 ))
-
-            is LoadedRegistrations -> {
-                val registeredUsers = event
-                        .registrations
-                        .map { it.userId }.toSet()
-
-                val registering = model
-                        .registeringUserIdsForActivity[event.activityId]
-                        ?.filter { user ->
-                            !registeredUsers.contains(user)
-                        }
-                        ?.toSet() ?: emptySet()
-
-                val unregistering = model
-                        .unregisteringUserIdsForActivity[event.activityId]
-                        ?.filter { user ->
-                            registeredUsers.contains(user)
-                        }
-                        ?.toSet() ?: emptySet()
-
-                next(model.copy(
-                        registrations = event.registrations,
-                        loadingRegistrations = false,
-                        registeringUserIdsForActivity =
-                        model.registeringUserIdsForActivity +
-                                (event.activityId to registering),
-                        unregisteringUserIdsForActivity =
-                        model.unregisteringUserIdsForActivity +
-                                (event.activityId to unregistering)
-                ))
-            }
 
             is LoadedUsers ->
                 next(model.copy(
                         users = event.users,
-                        loadingAllUsers = false
+                        isLoadingAllUsers = false
                 ))
-
-            is RegisterUser -> {
-                val oldSet = model.registeringUserIdsForActivity
-                        .getOrDefault(event.activityId, emptySet())
-                next(model.copy(
-                        registeringUserIdsForActivity =
-                        model.registeringUserIdsForActivity
-                                + (event.activityId to oldSet + event.userId)),
-                        setOf(RegisterRemotely(event.userId, event.activityId))
-                )
-            }
-
-            is UnregisterUser -> {
-                val activity = event.registration.activityId
-                val user = event.registration.userId
-                val oldSet = model.unregisteringUserIdsForActivity.getOrDefault(activity, emptySet())
-                next(model.copy(
-                        unregisteringUserIdsForActivity =
-                        model.unregisteringUserIdsForActivity
-                                + (activity to oldSet + user)),
-                        setOf(UnregisterRemotely(event.registration))
-                )
-            }
 
             is Logout -> dispatch(setOf(TriggerLogout))
 
@@ -105,29 +51,17 @@ fun update(model: StudsModel, event: StudsEvent): Next<StudsModel, StudsEffect> 
 private fun load(model: StudsModel, loadable: Loadable): Next<StudsModel, StudsEffect> =
         when (loadable) {
             is CitiesLoadable -> next(
-                    model.copy(loadingCities = true),
+                    model.copy(isLoadingCities = true),
                     setOf(Fetch(loadable))
             )
 
             is ActivitiesLoadable -> next(
-                    model.copy(loadingActivities = true),
-                    setOf(Fetch(loadable))
-            )
-
-            is RegistrationsLoadable -> next(
-                    model.copy(
-                            loadingRegistrations = true,
-                            registrations = emptySet(),
-                            registeringUserIdsForActivity =
-                            model.registeringUserIdsForActivity + (loadable.activityId to emptySet()),
-                            unregisteringUserIdsForActivity =
-                            model.unregisteringUserIdsForActivity + (loadable.activityId to emptySet())
-                    ),
+                    model.copy(isLoadingActivities = true),
                     setOf(Fetch(loadable))
             )
 
             is UsersLoadable -> next(
-                    model.copy(loadingAllUsers = true),
+                    model.copy(isLoadingAllUsers = true),
                     setOf(Fetch(UsersLoadable))
             )
         }

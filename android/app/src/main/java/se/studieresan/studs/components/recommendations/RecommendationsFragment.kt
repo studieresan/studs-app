@@ -38,19 +38,10 @@ class RecommendationsFragment: Fragment(), ActivityAdapter.ActivitySelectedListe
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
-        inflater.inflate(R.layout.fragment_todo, container, false)
+            inflater.inflate(R.layout.fragment_todo, container, false)
 
-    override fun onRegisterForEventSelected(activity: Activity) {
-        val ft = fragmentManager!!.beginTransaction()
-        val prev = fragmentManager!!.findFragmentByTag("dialog")
-        if (prev != null) {
-            ft.remove(prev)
-        }
-        ft.addToBackStack(null)
-
-        val newFragment = RegisterFragment.createWithActivityKey(activity.id)
-        newFragment.show(ft, "dialog")
-    }
+    override fun onRegisterForEventSelected(activity: Activity) =
+        RegisterFragment.display(activity.id, fragmentManager!!)
 
     override fun onCalendarSelected(activity: Activity) {
         if (activity.start != null && activity.end != null) {
@@ -71,12 +62,15 @@ class RecommendationsFragment: Fragment(), ActivityAdapter.ActivitySelectedListe
                 activitiesCache = model.activities
                         .filterNot { it.isUserActivity ?: false }
                         .toSet()
-                val isLoading = model.loadingAllUsers ||
-                        model.loadingCities ||
-                        model.loadingRegistrations
+
+                val isLoading = model.isLoadingAllUsers ||
+                        model.isLoadingCities ||
+                        model.isLoadingActivities
+
                 todos_progress.show(isLoading)
                 todos_rv.show(!isLoading)
             }
+
             override fun dispose() {}
         }
 

@@ -4,8 +4,10 @@ import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.util.Log
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.*
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.QuerySnapshot
 import com.spotify.mobius.Connectable
 import com.spotify.mobius.Connection
 import com.spotify.mobius.disposables.Disposable
@@ -14,15 +16,11 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.experimental.channels.SendChannel
 import kotlinx.coroutines.experimental.channels.actor
 import kotlinx.coroutines.experimental.launch
-import se.studieresan.studs.COOKIES
-import se.studieresan.studs.LOGGED_IN
-import se.studieresan.studs.THEME_KEY
+import se.studieresan.studs.*
 import se.studieresan.studs.models.Activity
 import se.studieresan.studs.models.City
 import se.studieresan.studs.models.Coordinate
-import se.studieresan.studs.models.Registration
 import se.studieresan.studs.services.backend.UserSource
-import java.util.*
 
 val TAG = EffectHandler::class.java.simpleName
 
@@ -34,11 +32,10 @@ class EffectHandler(
 ): Connectable<StudsEffect, StudsEvent> {
 
     private val listeners: MutableMap<String, Disposable?> = mutableMapOf()
-    private var registrationListener: ListenerRegistration? = null
     private var output: Consumer<StudsEvent>? = null
     private var isDisposed = false
 
-    var loadableChannel: SendChannel<Loadable>? = null
+    private var loadableChannel: SendChannel<Loadable>? = null
 
     @SuppressLint("ApplySharedPref", "MissingPermission")
     private fun accept(effect: StudsEffect, output: Consumer<StudsEvent>) {
@@ -46,25 +43,6 @@ class EffectHandler(
             is Fetch -> launch {
                 loadableChannel?.send(effect.loadable)
             }
-
-            is RegisterRemotely -> {
-                val registration = mapOf<String, Any>(
-                        "userId" to effect.userId,
-                        "registeredById" to effect.userId, // TODO set the correct ID here
-                        "registeredAt" to Timestamp(Date())
-                )
-                firestore.collection("activities")
-                        .document(effect.activityId)
-                        .collection("people")
-                        .add(registration)
-            }
-
-            is UnregisterRemotely ->
-                firestore.collection("activities")
-                        .document(effect.registration.activityId)
-                        .collection("people")
-                        .document(effect.registration.id)
-                        .delete()
 
             is TriggerLogout -> logout()
 
@@ -120,18 +98,6 @@ class EffectHandler(
                             }
                 }
 
-                is RegistrationsLoadable -> {
-                    registrationListener?.remove()
-                    registrationListener = firestore.collection("activities")
-                            .document(loadable.activityId)
-                            .collection("people")
-                            .addSafeSnapshotListener { snap ->
-                                val registrations = parseRegistrations(snap, loadable.activityId)
-                                output.accept(LoadedRegistrations(registrations, loadable.activityId))
-                            }
-                    "registrations" to registrationListener
-                }
-
                 is UsersLoadable -> {
                     if (listeners.containsKey("users")) return@synchronized
                     "users" to userSource
@@ -151,16 +117,6 @@ class EffectHandler(
         }
     }
 
-    private fun CollectionReference.addSafeSnapshotListener(body: (QuerySnapshot) -> Unit): ListenerRegistration {
-        return this.addSnapshotListener { snap, exception ->
-            if (snap == null || exception != null) {
-                Log.d(TAG, "FETCH FAILED: $exception")
-            } else {
-                body(snap)
-            }
-        }
-    }
-
     private fun parseCity(citySnap: QuerySnapshot) =
             citySnap.map { snap ->
                 snap.toObject(City::class.java).copy(
@@ -169,17 +125,6 @@ class EffectHandler(
                         end = snap.dateOrNull("endDate")
                 )
             }.toSet()
-
-    private fun parseRegistrations(registrationSnap: QuerySnapshot, activityId: String): Set<Registration> =
-            registrationSnap
-                    .map { snap ->
-                        snap.toObject(Registration::class.java).copy(
-                                id = snap.id,
-                                activityId = activityId,
-                                time = snap.dateOrNull("registeredAt")
-                        )
-                    }
-                    .toSet()
 
     private fun parseActivities(activitiesSnap: QuerySnapshot): Set<Activity> =
             activitiesSnap.map { snap ->
@@ -208,9 +153,6 @@ class EffectHandler(
             listeners.clear()
         }
     }
-
-    private fun QueryDocumentSnapshot.dateOrNull(key: String) =
-            this.getTimestamp(key)?.toDate()
 
     @SuppressLint("ApplySharedPref")
     private fun logout() {

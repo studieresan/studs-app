@@ -10,7 +10,7 @@ interface UserSource {
 
     fun fetchUsers(): Single<Set<StudsUser>>
 
-    fun getLoggedInUser(users: Set<StudsUser>): StudsUser?
+    fun getLoggedInUser(users: Collection<StudsUser>): StudsUser?
 
 }
 
@@ -37,7 +37,7 @@ class UserSourceImpl(
                         }
             } else Single.just(users)
 
-    override fun getLoggedInUser(users: Set<StudsUser>): StudsUser? {
+    override fun getLoggedInUser(users: Collection<StudsUser>): StudsUser? {
         val email = preferences.getString(EMAIL, "none")
         return users.find { it.profile.email == email }
     }

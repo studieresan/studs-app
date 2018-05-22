@@ -8,9 +8,9 @@ import com.spotify.mobius.Connectable
 import com.spotify.mobius.Connection
 import com.spotify.mobius.functions.Consumer
 import io.reactivex.disposables.Disposable
-import se.studieresan.studs.services.backend.UserSource
 import se.studieresan.studs.components.share.domain.ShareError.LocationAddressInvalid
 import se.studieresan.studs.components.share.domain.ShareState.Finished
+import se.studieresan.studs.services.backend.UserSource
 import java.util.*
 
 class ShareEffectHandler(
@@ -21,13 +21,19 @@ class ShareEffectHandler(
 
     private var userSub: Disposable? = null
 
+    private var isDisposed = false
+
     private fun accept(effect: ShareEffect, output: Consumer<ShareEvent>) {
         val dispatch = output::accept
         when (effect) {
 
             is FetchUsers -> {
                 userSub = userSource.fetchUsers().subscribe { users ->
-                    dispatch(UsersChanged(users.toList()))
+                    synchronized(isDisposed) {
+                        if (!isDisposed) {
+                            dispatch(UsersChanged(users.toList()))
+                        }
+                    }
                 }
             }
 
@@ -66,10 +72,16 @@ class ShareEffectHandler(
     }
 
     private fun dispose() {
-        userSub?.dispose()
+        synchronized(isDisposed) {
+            userSub?.dispose()
+            isDisposed = true
+        }
     }
 
     override fun connect(output: Consumer<ShareEvent>): Connection<ShareEffect> {
+        synchronized(isDisposed) {
+            isDisposed = false
+        }
         return object: Connection<ShareEffect> {
             override fun accept(value: ShareEffect) = this@ShareEffectHandler.accept(value, output)
             override fun dispose() = this@ShareEffectHandler.dispose()

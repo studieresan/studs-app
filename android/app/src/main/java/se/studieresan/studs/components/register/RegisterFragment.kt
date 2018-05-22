@@ -3,15 +3,21 @@ package se.studieresan.studs.components.register
 import android.graphics.Point
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
+import android.support.v4.app.FragmentManager
 import android.support.v7.widget.LinearLayoutManager
 import android.view.*
 import com.spotify.mobius.Connection
-import com.spotify.mobius.disposables.Disposable
+import com.spotify.mobius.First
+import com.spotify.mobius.MobiusLoop
+import com.spotify.mobius.android.AndroidLogger
+import com.spotify.mobius.android.MobiusAndroid
+import com.spotify.mobius.functions.Consumer
 import kotlinx.android.synthetic.main.fragment_register.view.*
-import se.studieresan.studs.MainActivity
+import se.studieresan.studs.Application
 import se.studieresan.studs.R
 import se.studieresan.studs.adapters.MembersAdapter
-import se.studieresan.studs.domain.*
+import se.studieresan.studs.components.register.domain.*
+import se.studieresan.studs.loopFrom
 import se.studieresan.studs.models.Registration
 import se.studieresan.studs.models.StudsUser
 import se.studieresan.studs.show
@@ -28,10 +34,55 @@ class RegisterFragment: DialogFragment(), MembersAdapter.OnUserInteractionListen
             fragment.arguments = bundle
             return fragment
         }
+        fun display(activityId: String, fragmentManager: FragmentManager) {
+            val ft = fragmentManager.beginTransaction()
+            val prev = fragmentManager.findFragmentByTag("dialog")
+            if (prev != null) {
+                ft.remove(prev)
+            }
+            ft.addToBackStack(null)
+
+            val newFragment = RegisterFragment.createWithActivityKey(activityId)
+            newFragment.show(ft, "dialog")
+        }
     }
 
     private val adapter: MembersAdapter = MembersAdapter()
-    private var disposable: Disposable? = null
+    private var controller: MobiusLoop.Controller<RegisterModel, RegisterEvent>? = null
+    private var output: Consumer<RegisterEvent>? = null
+
+    private val dispatch: (RegisterEvent) -> Unit = { event ->
+        output?.accept(event)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val effectHandler = (activity!!.application as Application).registerEffectHandler
+        val activityId = arguments?.getString(activityKey)!!
+        val loopFactory = loopFrom(update, effectHandler)
+                .init {
+                    First.first(
+                            it.copy(
+                                    isLoadingUsers = true,
+                                    isLoadingRegistrations = true
+                            ),
+                            setOf(
+                                    FetchUsers,
+                                    FetchRegistrations(activityId = activityId)
+                            ))
+                }
+                .logger(AndroidLogger.tag("RegisterLoop"))
+        controller = MobiusAndroid.controller(loopFactory, RegisterModel(activityId = activityId))
+        controller?.connect(this::connectViews)
+    }
+
+    private fun connectViews(output: Consumer<RegisterEvent>?): Connection<RegisterModel> {
+        this.output = output
+        return object: Connection<RegisterModel> {
+            override fun accept(value: RegisterModel) = render(value)
+            override fun dispose() {}
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_register, container, false)
@@ -43,28 +94,18 @@ class RegisterFragment: DialogFragment(), MembersAdapter.OnUserInteractionListen
         return view
     }
 
-    fun render(model: StudsModel) {
-        view?.register_progress?.show(model.loadingRegistrations)
-        view?.recycler_view?.show(model.users.isNotEmpty() && !model.loadingRegistrations)
-        val key = arguments?.getString(activityKey)!!
-        val registering = model.registeringUserIdsForActivity[key] ?: emptySet()
-        val unregistering = model.unregisteringUserIdsForActivity[key] ?: emptySet()
+    fun render(model: RegisterModel) {
+        view?.register_progress?.show(model.isLoadingRegistrations)
+        view?.recycler_view?.show(model.users.isNotEmpty() && !model.isLoadingRegistrations)
+
+        val registering = model.registeringUserIds
+        val unregistering = model.unregisteringUserIds
 
         adapter.update(
                 newRegistrations = model.registrations,
                 newUsers = model.users.toList(),
                 newLoading = registering + unregistering
         )
-    }
-
-    override fun onStart() {
-        super.onStart()
-
-        val connection = object : Connection<StudsModel> {
-            override fun accept(model: StudsModel) = render(model)
-            override fun dispose() {}
-        }
-        disposable = (activity as MainActivity).loop.observe(connection)
     }
 
     override fun onResume() {
@@ -74,28 +115,39 @@ class RegisterFragment: DialogFragment(), MembersAdapter.OnUserInteractionListen
         display.getSize(size)
         window.setLayout((size.x * 0.90).toInt(), WindowManager.LayoutParams.WRAP_CONTENT)
         window.setGravity(Gravity.CENTER)
-
-        val key = arguments?.getString(activityKey)!!
-        (activity as MainActivity).dispatch(Load(RegistrationsLoadable(key)))
-
         super.onResume()
+
+        controller?.start()
     }
 
-    override fun onStop() {
-        disposable?.dispose()
-        super.onStop()
+    override fun onPause() {
+        super.onPause()
+        controller?.stop()
     }
 
-    override fun register(userId: String) {
-        val key = arguments?.getString(activityKey)!!
-        (activity as MainActivity).dispatch(RegisterUser(userId, key))
-    }
+    override fun register(userId: String) =
+            dispatch(RegisterUser(userId))
 
     override fun unregister(registration: Registration) =
-        (activity as MainActivity).dispatch(UnregisterUser(registration))
+        dispatch(UnregisterUser(registration))
 
     override fun call(user: StudsUser) {
         TODO("not implemented")
     }
 
+    val modelKey = "registerModelKey"
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        controller?.model?.let { model ->
+            outState.putParcelable(modelKey, model)
+        }
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        savedInstanceState?.getParcelable<RegisterModel>(modelKey)?.let {
+            model ->
+            controller?.replaceModel(model)
+        }
+    }
 }

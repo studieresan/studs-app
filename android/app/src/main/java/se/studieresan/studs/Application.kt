@@ -12,6 +12,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import se.studieresan.studs.components.register.domain.RegisterEffectHandler
 import se.studieresan.studs.components.share.domain.ShareEffectHandler
 import se.studieresan.studs.domain.EffectHandler
 import se.studieresan.studs.services.backend.*
@@ -82,6 +83,13 @@ class Application: android.app.Application() {
                 userSource = userSource,
                 firestore = firestore,
                 geocoder = geocoder
+        )
+    }
+
+    val registerEffectHandler: RegisterEffectHandler by lazy {
+        RegisterEffectHandler(
+                userSource = userSource,
+                firestore = firestore
         )
     }
 }

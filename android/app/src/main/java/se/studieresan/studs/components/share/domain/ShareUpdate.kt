@@ -9,6 +9,7 @@ import se.studieresan.studs.next
 
 fun update(model: ShareModel, event: ShareEvent): Next<ShareModel, ShareEffect> =
         when (event) {
+
             is UsersChanged ->
                 next(model = model.copy(users = event.users, isLoadingUsers = false))
 
@@ -48,12 +49,6 @@ fun update(model: ShareModel, event: ShareEvent): Next<ShareModel, ShareEffect> 
                 ))
             }
 
-            is LoadUsers ->
-                    next(
-                            model = model.copy(isLoadingUsers = true),
-                            effects = setOf(FetchUsers)
-                    )
-
             is SubmitClicked -> {
                 val errors = findErrors(model)
                 if (errors.isEmpty()) {
@@ -73,6 +68,7 @@ fun update(model: ShareModel, event: ShareEvent): Next<ShareModel, ShareEffect> 
             is ErrorAdded -> next(model = model.copy(errors = model.errors + event.error))
 
             is StateChanged -> next(model = model.copy(state = event.state))
+
         }
 
 private fun findErrors(model: ShareModel): List<ShareError> =

@@ -13,13 +13,10 @@ data class StudsModel(
         val users: Set<StudsUser> = emptySet(),
         val activities: Set<Activity> = emptySet(),
         val registrations: Set<Registration> = emptySet(),
-        val registeringUserIdsForActivity: Map<String, Set<String>> = emptyMap(),
-        val unregisteringUserIdsForActivity: Map<String, Set<String>> = emptyMap(),
         val location: Coordinate? = null,
-        val loadingAllUsers: Boolean = false,
-        val loadingCities: Boolean = false,
-        val loadingActivities: Boolean = false,
-        val loadingRegistrations: Boolean = false,
+        val isLoadingAllUsers: Boolean = false,
+        val isLoadingCities: Boolean = false,
+        val isLoadingActivities: Boolean = false,
         val theme: Theme = Theme.Night,
         val selectedActivityId: String? = null,
         val page: Page = UserShares
@@ -28,7 +25,6 @@ data class StudsModel(
 }
 
 sealed class Loadable
-data class RegistrationsLoadable(val activityId: String): Loadable()
 object ActivitiesLoadable: Loadable()
 object CitiesLoadable: Loadable()
 object UsersLoadable: Loadable()
@@ -37,10 +33,7 @@ sealed class StudsEvent
 data class Load(val loadable: Loadable): StudsEvent()
 data class LoadedCities(val cities: Set<City>): StudsEvent()
 data class LoadedActivities(val activities: Set<Activity>): StudsEvent()
-data class LoadedRegistrations(val registrations: Set<Registration>, val activityId: String): StudsEvent()
 data class LoadedUsers(val users: Set<StudsUser>): StudsEvent()
-data class RegisterUser(val userId: String, val activityId: String): StudsEvent()
-data class UnregisterUser(val registration: Registration): StudsEvent()
 data class SelectActivity(val activityId: String): StudsEvent()
 data class SelectPage(val page: Page): StudsEvent()
 data class LocationChanged(val coordinate: Coordinate): StudsEvent()
@@ -52,8 +45,6 @@ object SelectUserLocation: StudsEvent()
 
 sealed class StudsEffect
 data class Fetch(val loadable: Loadable): StudsEffect()
-data class RegisterRemotely(val userId: String, val activityId: String): StudsEffect()
-data class UnregisterRemotely(val registration: Registration): StudsEffect()
 data class SaveTheme(val theme: Theme): StudsEffect()
 object RestoreTheme: StudsEffect()
 object TriggerLogout: StudsEffect()

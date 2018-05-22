@@ -32,7 +32,6 @@ data class PersonNotGoing(val person: StudsUser): ShareEvent()
 data class ErrorAdded(val error: ShareError): ShareEvent()
 data class StateChanged(val state: ShareState): ShareEvent()
 object SubmitClicked: ShareEvent()
-object LoadUsers: ShareEvent()
 
 sealed class ShareEffect
 object FetchUsers: ShareEffect()

@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import com.spotify.mobius.Connection
+import com.spotify.mobius.First
 import com.spotify.mobius.MobiusLoop
 import com.spotify.mobius.android.AndroidLogger
 import com.spotify.mobius.android.MobiusAndroid
@@ -72,7 +73,13 @@ class ShareActivity : AppCompatActivity() {
         setContentView(R.layout.activity_share)
         val effectHandler = (application as Application).shareEffectHandler
         val loopFactory = loopFrom(::update, effectHandler)
-                .logger(AndroidLogger.tag("MainLoop"))
+                .init { model ->
+                    First.first(
+                            model.copy(isLoadingUsers = true),
+                            setOf(FetchUsers)
+                    )
+                }
+                .logger(AndroidLogger.tag("ShareLoop"))
         controller = MobiusAndroid.controller(loopFactory, ShareModel())
         controller?.connect { connectViews(it) }
     }
@@ -146,7 +153,6 @@ class ShareActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         controller?.start()
-        dispatch(LoadUsers)
     }
 
     override fun onPause() {

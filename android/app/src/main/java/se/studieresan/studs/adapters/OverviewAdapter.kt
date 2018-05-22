@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.list_item_post.view.*
+import kotlinx.android.synthetic.main.options_bar.view.*
 import se.studieresan.studs.OnLocationSelectedListener
 import se.studieresan.studs.R
 import se.studieresan.studs.circularImage
@@ -16,11 +17,14 @@ import se.studieresan.studs.models.StudsUser
 import se.studieresan.studs.models.getIconForCategory
 import kotlin.properties.Delegates
 
-class OverviewAdapter(val callback: OnLocationSelectedListener, val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class OverviewAdapter(
+        val callback: OnLocationSelectedListener,
+        val context: Context
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
-        val PLACEHOLDER_TYPE = 0
-        val NORMAL_TYPE = 1
+        private val PLACEHOLDER_TYPE = 0
+        private val NORMAL_TYPE = 1
     }
 
     data class Model(
@@ -79,8 +83,11 @@ class OverviewAdapter(val callback: OnLocationSelectedListener, val context: Con
             view.address.text = activity.location.address
 
             view.image.circularImage(url = user?.profile?.picture ?: "")
-            view.post_root.setOnClickListener {
-                callback.onLocationSelected(activity)
+            view.show_on_map.setOnClickListener {
+                callback.onShowActivity(activity)
+            }
+            view.register.setOnClickListener {
+                callback.onRegisterForActivity(activity)
             }
         }
     }

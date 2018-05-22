@@ -33,8 +33,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.slide_layout.*
 import se.studieresan.studs.components.login.LoginActivity
 import se.studieresan.studs.components.posts.OverviewFragment
-import se.studieresan.studs.components.share.ShareActivity
 import se.studieresan.studs.components.recommendations.RecommendationsFragment
+import se.studieresan.studs.components.share.ShareActivity
 import se.studieresan.studs.components.travelInfo.InfoFragment
 import se.studieresan.studs.domain.*
 import se.studieresan.studs.domain.Page.*
@@ -59,9 +59,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
             val point = it.location.latLng!!
             val position = LatLng(point.latitude, point.longitude)
             val icon = if (it.isUserActivity == true) HUE_RED else HUE_YELLOW
+            val title = it.title ?: it.description
             val marker = map!!.addMarker(
                     MarkerOptions()
-                            .title(it.title ?: it.description)
+                            .title(title?.trim()?.replace('\n', ' '))
                             .position(position)
                             .icon(defaultMarker(icon))
             )
@@ -192,9 +193,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
                 .init {
                     First.first(
                             it.copy(
-                                    loadingCities = true,
-                                    loadingActivities = true,
-                                    loadingAllUsers = true
+                                    isLoadingCities = true,
+                                    isLoadingActivities = true,
+                                    isLoadingAllUsers = true
                             ),
                             setOf(
                                     Fetch(UsersLoadable),

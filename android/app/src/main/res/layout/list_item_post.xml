@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<LinearLayout
     android:id="@+id/post_root"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingStart="@dimen/margin_small"
     android:paddingEnd="@dimen/margin_small"
-    android:background="?attr/selectableItemBackground"
-    android:clickable="true"
+    android:orientation="vertical"
     android:gravity="top"
     >
 
     <include
-        layout="@layout/divider"/>
+        layout="@layout/divider"
+        />
 
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_normal"
-        android:layout_marginBottom="@dimen/margin_normal"
+        android:layout_marginBottom="@dimen/margin_small"
         android:gravity="center_vertical"
         >
 
@@ -76,4 +76,8 @@
 
     </LinearLayout>
 
-</FrameLayout>
+    <include
+        layout="@layout/options_bar"
+        />
+
+</LinearLayout>
