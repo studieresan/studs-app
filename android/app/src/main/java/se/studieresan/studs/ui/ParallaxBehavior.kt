@@ -5,9 +5,6 @@ import android.support.design.widget.CoordinatorLayout
 import android.util.AttributeSet
 import android.view.View
 
-/**
- * Created by jespersandstrom on 2017-05-27.
- */
 class ParallaxBehavior(context: Context, attrs: AttributeSet) : CoordinatorLayout.Behavior<View>(context, attrs) {
 
     companion object {

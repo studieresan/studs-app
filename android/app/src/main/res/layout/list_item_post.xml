@@ -1,46 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="72dp"
+<FrameLayout
+    android:id="@+id/post_root"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="@dimen/margin_small"
+    android:paddingEnd="@dimen/margin_small"
     android:background="?attr/selectableItemBackground"
     android:clickable="true"
-    android:gravity="center_vertical">
+    android:gravity="top"
+    >
 
-    <ImageView
-        android:id="@+id/image"
-        android:layout_width="@dimen/list_item_icon_size"
-        android:layout_height="@dimen/list_item_icon_size"
-        android:layout_marginStart="@dimen/margin_normal"
-        android:layout_marginEnd="@dimen/margin_normal"
-        android:tint="@color/colorPrimary"
-        android:src="@drawable/ic_person_black_24dp"/>
+    <include
+        layout="@layout/divider"/>
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_weight="1"
-        android:gravity="center_vertical">
+        android:layout_marginTop="@dimen/margin_normal"
+        android:layout_marginBottom="@dimen/margin_normal"
+        android:gravity="center_vertical"
+        >
+
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="@dimen/list_item_icon_size"
+            android:layout_height="@dimen/list_item_icon_size"
+            android:layout_marginStart="@dimen/margin_normal"
+            android:layout_marginEnd="@dimen/margin_normal"
+            android:tint="@color/colorPrimary"
+            />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginEnd="@dimen/margin_normal"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            >
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/list_item_title_size"
+                android:drawableTint="@color/colorAccent"
+                android:drawablePadding="@dimen/margin_small"
+                style="@style/TextAppearance.AppCompat.Title"
+                />
+
+            <TextView
+                android:id="@+id/address"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/BodyText"
+                />
+
+            <TextView
+                android:id="@+id/sub_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@style/BodyText"
+                />
+
+        </LinearLayout>
+
         <TextView
-            android:id="@+id/title"
+            android:id="@+id/time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="@dimen/list_item_title_size"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:drawableTint="@color/colorAccent"
-            android:drawablePadding="@dimen/margin_small"
-            android:layout_marginEnd="@dimen/margin_normal"/>
-        <TextView
-            android:id="@+id/sub_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_marginEnd="@dimen/margin_normal"
+            />
+
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/margin_normal"/>
-
-</LinearLayout>
+</FrameLayout>

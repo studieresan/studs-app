@@ -20,13 +20,7 @@
             android:name=".MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme"
-            android:windowSoftInputMode="adjustPan">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:windowSoftInputMode="adjustPan" />
 
         <service android:name=".services.MessagingService">
             <intent-filter>
@@ -35,9 +29,19 @@
         </service>
 
         <activity
-            android:name=".components.Login.LoginActivity"
-            android:label="@string/title_activity_login"
-            android:theme="@style/AppTheme"></activity>
+            android:name=".components.login.LoginActivity"
+            android:label="Studs"
+            android:theme="@style/AppTheme.Launcher">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".components.share.ShareActivity"
+            android:screenOrientation="portrait"
+            />
     </application>
 
 </manifest>

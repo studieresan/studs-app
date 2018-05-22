@@ -9,10 +9,6 @@ import android.view.ViewGroup
 import android.view.WindowInsets
 import se.studieresan.studs.R
 
-
-/**
- * Created by jespersandstrom on 2017-05-27.
- */
 class SlideupNestedScrollview : NestedScrollView {
 
     val TAG = SlideupNestedScrollview::class.java.simpleName
@@ -25,11 +21,11 @@ class SlideupNestedScrollview : NestedScrollView {
 
     fun preview() {
         // Allow previewing up to a certain point
-        if (scrollY < 100) smoothScrollBy(0, peekHeight.toInt() * 3)
+        if (scrollY < 100) smoothScrollTo(0, peekHeight.toInt() * 3)
     }
 
     fun obscure() {
-        smoothScrollTo(0, peekHeight.toInt() * 3)
+        scrollTo(0, peekHeight.toInt() * 3)
     }
 
     // Used for determining the location of the contents of this view

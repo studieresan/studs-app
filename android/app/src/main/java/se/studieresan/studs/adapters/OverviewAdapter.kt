@@ -2,22 +2,20 @@ package se.studieresan.studs.adapters
 
 import android.content.Context
 import android.support.v4.content.ContextCompat
+import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
-import com.bumptech.glide.Glide
-import jp.wasabeef.glide.transformations.CropCircleTransformation
+import kotlinx.android.synthetic.main.list_item_post.view.*
 import se.studieresan.studs.OnLocationSelectedListener
 import se.studieresan.studs.R
-import se.studieresan.studs.models.Location
-import se.studieresan.studs.models.User
+import se.studieresan.studs.circularImage
+import se.studieresan.studs.models.Activity
+import se.studieresan.studs.models.StudsUser
 import se.studieresan.studs.models.getIconForCategory
 import kotlin.properties.Delegates
 
-/** * Created by jespersandstrom on 2017-06-07. */
 class OverviewAdapter(val callback: OnLocationSelectedListener, val context: Context) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -25,62 +23,75 @@ class OverviewAdapter(val callback: OnLocationSelectedListener, val context: Con
         val NORMAL_TYPE = 1
     }
 
-    var dataSource: List<Location> by Delegates.observable(emptyList()) { _, _, _ ->
-        notifyDataSetChanged()
+    data class Model(
+            val activities: List<Activity> = emptyList(),
+            val users: Set<StudsUser> = emptySet()
+    )
+
+    var dataSource: Model by Delegates.observable(Model()) { _, oldModel, newModel ->
+        if (oldModel == newModel) return@observable
+        val old = oldModel.activities
+        val new = newModel.activities
+
+        val diff = DiffUtil.calculateDiff(object: DiffUtil.Callback() {
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+                    anyPostsExist(old) && old[oldItemPosition].id == new[newItemPosition].id
+
+            override fun getOldListSize(): Int = if (anyPostsExist(old)) old.size else 1
+
+            override fun getNewListSize(): Int = new.size
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+                    anyPostsExist(old) && old[oldItemPosition] == new[newItemPosition]
+        })
+        diff.dispatchUpdatesTo(this)
     }
-    var users: List<User> by Delegates.observable(emptyList()) { _, _, _ ->
-        notifyDataSetChanged()
-    }
 
-    override fun onCreateViewHolder(parent: ViewGroup, pos: Int): RecyclerView.ViewHolder? =
-        if (dataSource.isEmpty()) {
-            val v = LayoutInflater.from(parent.context).inflate(R.layout.list_item_placeholder, parent, false)
-            PlaceHolder(v)
-        } else {
-            val v = LayoutInflater.from(parent.context).inflate(R.layout.list_item_post, parent, false)
-            ViewHolder(v)
-        }
+    override fun onCreateViewHolder(parent: ViewGroup, pos: Int): RecyclerView.ViewHolder =
+            if (anyPostsExist(dataSource.activities)) {
+                val v = LayoutInflater.from(parent.context).inflate(R.layout.list_item_post, parent, false)
+                ViewHolder(v)
+            } else {
+                val v = LayoutInflater.from(parent.context).inflate(R.layout.list_item_placeholder, parent, false)
+                PlaceHolder(v)
+            }
 
-    override fun getItemViewType(position: Int) = if (dataSource.isEmpty()) PLACEHOLDER_TYPE else NORMAL_TYPE
+    override fun getItemViewType(position: Int) =
+            if (anyPostsExist(dataSource.activities)) NORMAL_TYPE
+            else PLACEHOLDER_TYPE
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, pos: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, pos: Int) {
         if (holder is ViewHolder) {
-           val location = dataSource[pos]
-           val user = users.find { it.id == location.user }
-           holder.title.text = location.getDescriptionForCategory()
-           val ic = getIconForCategory(location.category)
-           val drawable = ContextCompat.getDrawable(context, ic)
-           drawable.setBounds( 0, 0, 60, 60 );
-           holder.title.setCompoundDrawables(drawable, null, null, null)
-           holder.subTitle.text = user?.name ?: "Unknown was here"
-           holder.time.text = location.getTimeAgo()
-           if (user != null) {
-               holder.image.circularImage(url = user.picture)
-           } else {
-               val fallback = holder.itemView.context.getDrawable(R.drawable.ic_person_black_24dp)
-               holder.image.setImageDrawable(fallback)
-           }
-           holder.itemView.setOnClickListener {
-               callback.onLocationSelected(location)
-           }
-       }
+            val activity = dataSource.activities[pos]
+            val user = dataSource.users.find { it.id == activity.author }
+            val view = holder.itemView
+
+
+            view.title.text = activity.description?.trim()
+
+            val ic = getIconForCategory(activity.category ?: "other")
+            val drawable = ContextCompat.getDrawable(context, ic)
+            drawable?.setBounds( 0, 0, 60, 60 )
+            view.title.setCompoundDrawables(null, null, drawable, null)
+            view.sub_title.text = "${user?.profile?.firstName} ${user?.profile?.lastName}"
+            // holder.time.text = location.getTimeAgo() TODO
+
+            view.address.text = activity.location.address
+
+            view.image.circularImage(url = user?.profile?.picture ?: "")
+            view.post_root.setOnClickListener {
+                callback.onLocationSelected(activity)
+            }
+        }
     }
 
-    override fun getItemCount() = if (dataSource.isEmpty()) 1 else dataSource.count()
+    override fun getItemCount() =
+            if (anyPostsExist(dataSource.activities)) dataSource.activities.size
+            else 1
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val title = view.findViewById(R.id.title) as TextView
-        val subTitle = view.findViewById(R.id.sub_title) as TextView
-        val image = view.findViewById(R.id.image) as ImageView
-        val time = view.findViewById(R.id.time) as TextView
-    }
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view)
+
+    private fun anyPostsExist(activities: List<Activity>) = activities.isNotEmpty()
 
     class PlaceHolder(view: View) : RecyclerView.ViewHolder(view)
 }
-
-fun ImageView.circularImage(url: String?) =
-        Glide.with(context)
-                .load(url)
-                .centerCrop()
-                .bitmapTransform(CropCircleTransformation(context))
-                .into(this)

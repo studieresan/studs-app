@@ -5,10 +5,10 @@
     android:layout_height="wrap_content"
     android:gravity="center_horizontal"
     app:layout_anchor="@+id/slide_up"
-    android:background="@color/backgroundDark"
+    android:background="@color/studs_dark"
     app:layout_behavior=".ui.BottomNavBehavior">
 
-    <ImageButton
+    <se.studieresan.studs.ui.NavButton
         android:id="@+id/nav_1"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
@@ -16,7 +16,7 @@
         style="@style/Widget.AppCompat.Button.Borderless"
         android:src="@drawable/ic_whatshot_black_24dp" />
 
-    <ImageButton
+    <se.studieresan.studs.ui.NavButton
         android:id="@+id/nav_2"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/bottom_nav_icon_height"
@@ -24,7 +24,7 @@
         style="@style/Widget.AppCompat.Button.Borderless"
         android:src="@drawable/ic_info_outline_black_24dp" />
 
-    <ImageButton
+    <se.studieresan.studs.ui.NavButton
         android:id="@+id/nav_3"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/bottom_nav_icon_height"
