@@ -34,6 +34,7 @@ class Application: android.app.Application() {
 
         val okHttpClient = OkHttpClient.Builder()
                 .addInterceptor(logging)
+                .addInterceptor(cacheInterceptor(this))
                 .addInterceptor(AddCookiesInterceptor(this))
                 .addInterceptor(ReceivedCookiesInterceptor(this))
                 .cache(cache)

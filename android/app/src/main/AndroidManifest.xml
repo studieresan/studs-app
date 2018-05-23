@@ -11,7 +11,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        >
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyCZnicWC6uND5-lcsFy4OePZTEkWYLXd20" />
@@ -20,7 +21,9 @@
             android:name=".MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme"
-            android:windowSoftInputMode="adjustPan" />
+            android:windowSoftInputMode="adjustPan"
+            android:launchMode="singleInstance"
+            />
 
         <service android:name=".services.MessagingService">
             <intent-filter>
@@ -31,7 +34,9 @@
         <activity
             android:name=".components.login.LoginActivity"
             android:label="Studs"
-            android:theme="@style/AppTheme.Launcher">
+            android:theme="@style/AppTheme.Launcher"
+            android:launchMode="singleInstance"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -41,6 +46,7 @@
         <activity
             android:name=".components.share.ShareActivity"
             android:screenOrientation="portrait"
+            android:launchMode="singleInstance"
             />
     </application>
 
